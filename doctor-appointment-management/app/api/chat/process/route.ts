@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
-import dbConnect from "@/lib/dbConnect"
-import Patient from "@/lib/models/Patient"
-import { mockPatients } from "@/lib/data"
+import { supabase } from "@/lib/supabase"
 
 export async function POST(request: Request) {
   try {
@@ -44,20 +42,21 @@ export async function POST(request: Request) {
       })
     }
 
-    // Mock response for patient queries
+    // Response for patient queries using Supabase
     if (message.toLowerCase().includes("spine") || message.toLowerCase().includes("spine injury")) {
-      await dbConnect()
-      const spinePatients = await Patient.find({
-        $or: [
-          { diagnosis: /spine/i },
-          { diagnosis: /disc/i },
-          { diagnosis: /cervical/i },
-        ],
-      }).lean()
+      const { data: spinePatients, error } = await supabase
+        .from("patients")
+        .select("*")
+        .or("diagnosis.ilike.%spine%,diagnosis.ilike.%disc%,diagnosis.ilike.%cervical%")
+
+      if (error) {
+        console.error("Supabase query error:", error)
+        return NextResponse.json({ error: "Failed to query patients" }, { status: 500 })
+      }
 
       return NextResponse.json({
         query: message,
-        queryResults: spinePatients,
+        queryResults: spinePatients || [],
       })
     }
 

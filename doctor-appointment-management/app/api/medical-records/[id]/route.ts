@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server"
-import dbConnect from "@/lib/dbConnect"
-import MedicalRecord from "@/lib/models/MedicalRecord"
+import { supabase } from "@/lib/supabase"
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        await dbConnect()
         const { id } = await params
         const body = await request.json()
 
-        const updatedRecord = await MedicalRecord.findByIdAndUpdate(
-            id,
-            { $set: body },
-            { new: true }
-        )
+        const { data: updatedRecord, error } = await supabase
+            .from("medicalrecords")
+            .update(body)
+            .eq("id", id)
+            .select()
+            .single()
+
+        if (error) {
+            console.error("Supabase update error:", error)
+            return NextResponse.json({ error: "Failed to update medical record" }, { status: 500 })
+        }
 
         if (!updatedRecord) {
             return NextResponse.json({ error: "Medical record not found" }, { status: 404 })
