@@ -1,0 +1,47 @@
+import { NextResponse } from "next/server"
+import { supabase } from "@/lib/supabase"
+import { getAuthSession } from "@/lib/auth"
+
+export async function GET() {
+    try {
+        const { data, error } = await supabase.from("opd").select("*").order("created_at", { ascending: false })
+        if (error) throw error
+        return NextResponse.json(data)
+    } catch (error) {
+        console.error("Failed to fetch OPD registrations:", error)
+        return NextResponse.json({ error: "Failed to fetch OPD registrations" }, { status: 500 })
+    }
+}
+
+export async function POST(request: Request) {
+    try {
+        const session = await getAuthSession()
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
+        const body = await request.json()
+        const opdData = {
+            uhid_no: body.uhidNo || body.uhid_no,
+            date: body.date,
+            token_no: body.tokenNo || body.token_no,
+            patient_name: body.patientName || body.patient_name,
+            age_sex: body.ageSex || body.age_sex,
+            opd_no: body.opdNo || body.opd_no,
+            guardian_name: body.guardianName || body.guardian_name,
+            mobile_no: body.mobileNo || body.mobile_no,
+            valid_upto: body.validUpto || body.valid_upto,
+            consultant: body.consultant,
+            address: body.address,
+            patient_type: body.patientType || body.patient_type,
+            created_by: session.id,
+        }
+
+        const { data, error } = await supabase.from("opd").insert(opdData).select().single()
+        if (error) throw error
+        return NextResponse.json(data, { status: 201 })
+    } catch (error) {
+        console.error("Failed to create OPD registration:", error)
+        return NextResponse.json({ error: "Failed to create OPD registration" }, { status: 500 })
+    }
+}
