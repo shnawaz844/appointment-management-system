@@ -9,7 +9,7 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        let query = supabase.from("lab_results").select("*").order("date", { ascending: false })
+        let query = supabase.from("labresults").select("*").order("date", { ascending: false })
 
         if (session.role === "DOCTOR") {
             query = query.ilike("doctor", session.name.trim())
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         const body = await request.json()
 
         if (!body.id) {
-            const { count } = await supabase.from("lab_results").select("*", { count: "exact", head: true })
+            const { count } = await supabase.from("labresults").select("*", { count: "exact", head: true })
             body.id = `LAB${String((count || 0) + 1).padStart(3, "0")}`
         }
         if (!body.date) {
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
             values: body.values || [],
         }
 
-        const { data, error } = await supabase.from("lab_results").insert(labData).select().single()
+        const { data, error } = await supabase.from("labresults").insert(labData).select().single()
         if (error) throw error
         return NextResponse.json(data, { status: 201 })
     } catch (error) {

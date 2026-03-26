@@ -169,8 +169,8 @@ export default function SearchInsightsPage() {
                       <Badge
                         variant="outline"
                         className={`${result.confidence >= 0.9
-                            ? "bg-chart-3/10 text-chart-3 border-chart-3/30"
-                            : "bg-chart-5/10 text-chart-5 border-chart-5/30"
+                          ? "bg-chart-3/10 text-chart-3 border-chart-3/30"
+                          : "bg-chart-5/10 text-chart-5 border-chart-5/30"
                           }`}
                       >
                         {(result.confidence * 100).toFixed(0)}% confidence

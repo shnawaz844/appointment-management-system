@@ -160,7 +160,7 @@ export default function LabResultsPage() {
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Detailed overview of diagnostic metrics</p>
             </div>
             <CreateLabResultDialog onCreated={fetchLabResults}>
-              <Button className="rounded-xl px-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:scale-105 transition-transform">
+              <Button className="rounded-xl px-6 bg-[#e05d38] text-white hover:bg-[#c94f2f] hover:scale-105 transition-transform">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Lab Result
               </Button>

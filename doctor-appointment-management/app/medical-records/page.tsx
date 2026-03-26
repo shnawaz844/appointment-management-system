@@ -14,11 +14,10 @@ import { PageHeader } from "@/components/page-header"
 import { useRouter } from "next/navigation"
 
 interface MedicalRecord {
-  _id: string
   id: string
-  patientName: string
-  patientId: string
-  recordType: string
+  patient_name: string
+  patient_id: string
+  record_type: string
   date: string
   doctor: string
   status: "Active" | "Archived"
@@ -60,9 +59,9 @@ export default function MedicalRecordsPage() {
 
   const filteredRecords = records.filter((record) => {
     const matchesSearch =
-      record.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      record.patient_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.id.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType = typeFilter === "all" || record.recordType === typeFilter
+    const matchesType = typeFilter === "all" || record.record_type === typeFilter
     const matchesStatus = statusFilter === "all" || record.status === statusFilter
     return matchesSearch && matchesType && matchesStatus
   })
@@ -82,14 +81,14 @@ export default function MedicalRecordsPage() {
     if (!selectedRecord) return
     setEditLoading(true)
     try {
-      const res = await fetch(`/api/medical-records/${selectedRecord._id}`, {
+      const res = await fetch(`/api/medical-records/${selectedRecord.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ summary: editedSummary }),
       })
       if (res.ok) {
         const updated = await res.json()
-        setRecords((prev) => prev.map((r) => (r._id === updated._id ? updated : r)))
+        setRecords((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
         setSelectedRecord(updated)
         setIsEditing(false)
       }
@@ -221,7 +220,7 @@ export default function MedicalRecordsPage() {
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Chronological overview of patient documentation</p>
             </div>
             <CreateMedicalRecordDialog onCreated={fetchRecords}>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 shadow-lg shadow-blue-500/25 transition-all hover:scale-105 active:scale-95">
+              <Button className="h-11 rounded-xl px-6 bg-[#e05d38] text-white hover:bg-[#c94f2f] hover:scale-105 transition-transform">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Record
               </Button>
@@ -258,16 +257,16 @@ export default function MedicalRecordsPage() {
                 </TableHeader>
                 <TableBody>
                   {paginatedRecords.map((record) => (
-                    <TableRow key={record._id} className="hover:bg-blue-500/5 dark:hover:bg-blue-400/5 border-slate-100 dark:border-slate-800 transition-colors">
+                    <TableRow key={record.id} className="hover:bg-blue-500/5 dark:hover:bg-blue-400/5 border-slate-100 dark:border-slate-800 transition-colors">
                       <TableCell className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{record.id}</TableCell>
-                      <TableCell className="font-black text-slate-900 dark:text-white">{record.patientName}</TableCell>
-                      <TableCell className="font-mono text-xs text-slate-500">{record.patientId}</TableCell>
+                      <TableCell className="font-black text-slate-900 dark:text-white">{record.patient_name}</TableCell>
+                      <TableCell className="font-mono text-xs text-slate-500">{record.patient_id}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
                             <FileText className="h-3.5 w-3.5 text-slate-500" />
                           </div>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{record.recordType}</span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{record.record_type}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-sm font-medium text-slate-600 dark:text-slate-400">{record.date}</TableCell>
@@ -351,15 +350,15 @@ export default function MedicalRecordsPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Patient Name</p>
-                  <p className="font-black text-slate-900 dark:text-white">{selectedRecord.patientName}</p>
+                  <p className="font-black text-slate-900 dark:text-white">{selectedRecord.patient_name}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Patient ID</p>
-                  <p className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{selectedRecord.patientId}</p>
+                  <p className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{selectedRecord.patient_id}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Record Type</p>
-                  <Badge variant="outline" className="font-bold border-slate-200 dark:border-slate-700">{selectedRecord.recordType}</Badge>
+                  <Badge variant="outline" className="font-bold border-slate-200 dark:border-slate-700">{selectedRecord.record_type}</Badge>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Consulting Doctor</p>

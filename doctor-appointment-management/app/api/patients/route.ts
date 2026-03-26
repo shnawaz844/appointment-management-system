@@ -72,6 +72,7 @@ export async function POST(request: Request) {
             doctor: body.doctor,
             last_visit: body.lastVisit || body.last_visit,
             report_type: body.reportType || body.report_type,
+            report_url: body.reportUrl || body.report_url,
             year: body.year,
             month: body.month,
             laterality: body.laterality,

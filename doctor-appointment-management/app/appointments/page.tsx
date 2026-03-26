@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Clock, Loader2, RotateCcw, Video } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -13,7 +14,72 @@ import { CreatePrescriptionDialog } from "@/components/create-prescription-dialo
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 
+const DUMMY_APPOINTMENTS = [
+  {
+    id: "dummy-1",
+    patient_name: "Rahul Sharma",
+    patient_id: "OPD-DUM-101",
+    date: new Date().toISOString().split("T")[0],
+    time: "10:00 AM",
+    doctor: "Dr. Amit Shah",
+    specialty: "Cardiology",
+    type: "Online",
+    status: "Confirmed",
+    isDummy: true
+  },
+  {
+    id: "dummy-2",
+    patient_name: "Sanya Malhotra",
+    patient_id: "OPD-DUM-102",
+    date: new Date().toISOString().split("T")[0],
+    time: "11:30 AM",
+    doctor: "Dr. Priya Rai",
+    specialty: "Pediatrics",
+    type: "Online",
+    status: "Scheduled",
+    isDummy: true
+  },
+  {
+    id: "dummy-3",
+    patient_name: "Vikram Singh",
+    patient_id: "OPD-DUM-103",
+    date: new Date().toISOString().split("T")[0],
+    time: "02:00 PM",
+    doctor: "Dr. Rajesh Kumar",
+    specialty: "Orthopedics",
+    type: "Online",
+    status: "Confirmed",
+    isDummy: true
+  },
+  {
+    id: "dummy-4",
+    patient_name: "Ananya Pandey",
+    patient_id: "OPD-DUM-104",
+    date: new Date().toISOString().split("T")[0],
+    time: "04:30 PM",
+    doctor: "Dr. Neha Sharma",
+    specialty: "Gynecology",
+    type: "Online",
+    status: "Scheduled",
+    isDummy: true
+  },
+  {
+    id: "dummy-5",
+    patient_name: "Karan Johar",
+    patient_id: "OPD-DUM-105",
+    date: new Date().toISOString().split("T")[0],
+    time: "06:00 PM",
+    doctor: "Dr. Sameer Khan",
+    specialty: "Neurology",
+    type: "Online",
+    status: "Confirmed",
+    isDummy: true
+  }
+]
+
 export default function AppointmentsPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [appointments, setAppointments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
@@ -26,6 +92,7 @@ export default function AppointmentsPage() {
   const [activeTab, setActiveTab] = useState("today") // "all" | "today"
   const [currentPage, setCurrentPage] = useState(1)
   const [mounted, setMounted] = useState(false)
+  const [patientSearch, setPatientSearch] = useState("")
   const itemsPerPage = 8
 
   const fetchAppointments = async () => {
@@ -41,7 +108,8 @@ export default function AppointmentsPage() {
       const docsData = await docsRes.json()
       const specsData = await specsRes.json()
 
-      setAppointments(Array.isArray(apptsData) ? apptsData : [])
+      const combinedAppts = [...(Array.isArray(apptsData) ? apptsData : []), ...DUMMY_APPOINTMENTS]
+      setAppointments(combinedAppts)
       if (meRes.ok) setUser(meData.user)
       setDoctors(Array.isArray(docsData) ? docsData : [])
       setSpecialties(Array.isArray(specsData) ? specsData : [])
@@ -55,6 +123,12 @@ export default function AppointmentsPage() {
   useEffect(() => {
     setMounted(true)
     fetchAppointments()
+    // Read patient param from OPD redirect
+    const patientParam = searchParams.get("patient")
+    if (patientParam) {
+      setPatientSearch(patientParam)
+      setActiveTab("all")
+    }
   }, [])
 
   const handleStatusChange = async (id: string, newStatus: string) => {
@@ -77,13 +151,22 @@ export default function AppointmentsPage() {
   }, [filterDoctor, filterMonth, filterYear, filterDate, activeTab])
 
   const filteredAppointments = appointments.filter(a => {
+    // Dummy items ONLY visible in the Online Appointment tabs
+    if (a.isDummy) {
+      return activeTab === "online" || activeTab === "allOnline"
+    }
+
     let match = true
     if (filterDoctor !== "all" && a.doctor !== filterDoctor) match = false
 
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     if (activeTab === "today" && a.date !== today) match = false
-    if (activeTab === "online" && a.type !== "Online") match = false
+    
+    // Online filtering logic (for non-dummy items)
+    if (activeTab === "online" && (a.type !== "Online" || a.date !== today)) match = false
+    
+    if (activeTab === "allOnline" && a.type !== "Online") match = false
 
     if (filterDate && a.date !== filterDate) match = false
 
@@ -96,6 +179,14 @@ export default function AppointmentsPage() {
       const year = a.date.split("-")[0]
       if (year !== filterYear) match = false
     }
+
+    // Patient search from OPD redirect
+    if (patientSearch) {
+      const term = patientSearch.toLowerCase()
+      const nameMatch = a.patient_name?.toLowerCase().includes(term)
+      if (!nameMatch) match = false
+    }
+
     return match
   })
 
@@ -124,6 +215,27 @@ export default function AppointmentsPage() {
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Appointments</h1>
           <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">Schedule and manage patient appointments</p>
         </div>
+
+        {/* Patient filter banner — shown when redirected from OPD list */}
+        {patientSearch && (
+          <div className="flex items-center gap-3 mb-6 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 animate-in fade-in slide-in-from-top-2 duration-300">
+            <span className="text-emerald-700 dark:text-emerald-400 text-sm font-bold">
+              🔍 Showing appointments for patient: <span className="font-black">{patientSearch}</span>
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto h-7 px-3 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 rounded-lg"
+              onClick={() => {
+                setPatientSearch("")
+                setActiveTab("today")
+                router.replace("/appointments")
+              }}
+            >
+              ✕ Clear
+            </Button>
+          </div>
+        )}
 
         {/* Appointment Stats */}
         <div className="grid gap-8 md:grid-cols-3 mb-10">
@@ -185,17 +297,7 @@ export default function AppointmentsPage() {
               activeTab === "today" ? "shadow-lg shadow-emerald-500/20" : "bg-white/50 dark:bg-slate-900/50"
             )}
           >
-            Today'sOffline Appointments
-          </Button>
-          <Button
-            variant={activeTab === "online" ? "default" : "outline"}
-            onClick={() => setActiveTab("online")}
-            className={cn(
-              "rounded-2xl px-6 font-bold transition-all",
-              activeTab === "online" ? "shadow-lg shadow-indigo-500/20" : "bg-white/50 dark:bg-slate-900/50"
-            )}
-          >
-            Today's Online Appointments
+            Today's Offline Appointments
           </Button>
           <Button
             variant={activeTab === "all" ? "default" : "outline"}
@@ -205,8 +307,39 @@ export default function AppointmentsPage() {
               activeTab === "all" ? "shadow-lg shadow-blue-500/20" : "bg-white/50 dark:bg-slate-900/50"
             )}
           >
-            All Appointments
+            All Offline Appointments
           </Button>
+          <Button
+            variant={activeTab === "online" ? "default" : "outline"}
+            onClick={() => {
+              setActiveTab("online")
+              setFilterDate("")
+              setFilterMonth("all")
+              setFilterYear("all")
+            }}
+            className={cn(
+              "rounded-2xl px-6 font-bold transition-all",
+              activeTab === "online" ? "shadow-lg shadow-indigo-500/20" : "bg-white/50 dark:bg-slate-900/50"
+            )}
+          >
+            Today's Online Appointments
+          </Button>
+          <Button
+            variant={activeTab === "allOnline" ? "default" : "outline"}
+            onClick={() => {
+              setActiveTab("allOnline")
+              setFilterDate("")
+              setFilterMonth("all")
+              setFilterYear("all")
+            }}
+            className={cn(
+              "rounded-2xl px-6 font-bold transition-all",
+              activeTab === "allOnline" ? "shadow-lg shadow-violet-500/20" : "bg-white/50 dark:bg-slate-900/50"
+            )}
+          >
+            All Online Appointments
+          </Button>
+
 
         </div>
 
@@ -322,33 +455,43 @@ export default function AppointmentsPage() {
                 <Table>
                   <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                     <TableRow className="hover:bg-transparent border-slate-200/50 dark:border-slate-800/50">
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12 w-10">S.no</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Patient Name</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">OPD NO</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Date</TableHead>
+                      {activeTab !== "today" && activeTab !== "online" && (
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Date</TableHead>
+                      )}
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Time</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Doctor</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Specialty</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Visit Type</TableHead>
+                      {activeTab !== "online" && activeTab !== "allOnline" && (
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Visit Type</TableHead>
+                      )}
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Status</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12 text-right flex justify-center">Action</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12 text-right">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {paginatedAppointments.length > 0 ? (
-                      paginatedAppointments.map((apt) => (
+                      paginatedAppointments.map((apt, index) => (
                         <TableRow key={apt.id || apt._id} className="group hover:bg-slate-500/5 transition-colors border-slate-200/50 dark:border-slate-800/50">
+                          <TableCell className="font-mono text-[11px] text-slate-500 py-4">
+                            {(currentPage - 1) * itemsPerPage + index + 1}
+                          </TableCell>
                           <TableCell className="font-bold text-slate-900 dark:text-white py-4">
                             <Link href={`/patients/${apt.patient_id}`} className="hover:underline hover:text-blue-600 transition-colors duration-200">
                               {apt.patient_name}
                             </Link>
                           </TableCell>
                           <TableCell className="font-mono text-[11px] text-slate-500 py-4">{apt.patient_id}</TableCell>
-                          <TableCell className="py-4">
-                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
-                              <Calendar className="h-3.5 w-3.5 text-blue-500" />
-                              {apt.date}
-                            </div>
-                          </TableCell>
+                          {activeTab !== "today" && activeTab !== "online" && (
+                            <TableCell className="py-4">
+                              <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                                <Calendar className="h-3.5 w-3.5 text-blue-500" />
+                                {apt.date}
+                              </div>
+                            </TableCell>
+                          )}
                           <TableCell className="py-4">
                             <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
                               <Clock className="h-3.5 w-3.5 text-amber-500" />
@@ -369,15 +512,17 @@ export default function AppointmentsPage() {
                               <span className="text-slate-400 text-[10px] font-black uppercase tracking-tighter">N/A</span>
                             )}
                           </TableCell>
-                          <TableCell className="py-4">
-                            <Badge variant="outline" className="text-[10px] font-bold border-slate-200 dark:border-slate-800 rounded-lg px-2">{apt.type}</Badge>
-                          </TableCell>
+                          {activeTab !== "online" && activeTab !== "allOnline" && (
+                            <TableCell className="py-4">
+                              <Badge variant="outline" className="text-[10px] font-bold border-slate-200 dark:border-slate-800 rounded-lg px-2">{apt.type}</Badge>
+                            </TableCell>
+                          )}
                           <TableCell className="py-4">
                             <Select
                               defaultValue={apt.status}
                               onValueChange={(val) => handleStatusChange(apt.id || apt._id, val)}
                             >
-                              <SelectTrigger className={`h-8 w-[110px] text-[10px] font-black uppercase tracking-wider rounded-lg border-none ${apt.status === "Completed" ? "bg-emerald-500/10 text-emerald-700" :
+                              <SelectTrigger className={`h-8 w-[120px] text-[10px] font-black uppercase tracking-wider rounded-lg border-none ${apt.status === "Completed" ? "bg-emerald-500/10 text-emerald-700" :
                                 apt.status === "Cancelled" ? "bg-rose-500/10 text-rose-700" :
                                   "bg-blue-500/10 text-blue-700"
                                 }`}>
@@ -392,11 +537,11 @@ export default function AppointmentsPage() {
                             </Select>
                           </TableCell>
                           <TableCell className="text-right py-4">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1.5">
                               {user && user.role !== "STAFF" && (
                                 <CreatePrescriptionDialog preselectedPatientId={apt.patient_id}>
-                                  <Button variant="outline" size="sm" className="h-8 px-3 rounded-lg border-blue-200 dark:border-blue-800 text-blue-600 hover:bg-blue-600 hover:text-white transition-all font-bold text-xs uppercase tracking-widest">
-                                    Prescribe
+                                  <Button variant="outline" size="sm" className="h-7 px-2.5 rounded-lg border-blue-200 dark:border-blue-800 text-blue-600 hover:bg-blue-600 hover:text-white transition-all font-bold text-[10px] uppercase tracking-widest" title="Prescribe">
+                                    Rx
                                   </Button>
                                 </CreatePrescriptionDialog>
                               )}
@@ -404,15 +549,16 @@ export default function AppointmentsPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-8 px-3 rounded-lg border-indigo-200 dark:border-indigo-800 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all font-bold text-xs uppercase tracking-widest"
+                                  className="h-7 px-2.5 rounded-lg border-indigo-200 dark:border-indigo-800 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all font-bold text-[10px] uppercase tracking-widest"
                                   onClick={() => window.open(`https://meet.jit.si/ParthGautamFoundation-${apt._id || apt.id}`, '_blank')}
+                                  title="Join Video Call"
                                 >
                                   <Video className="h-3 w-3 mr-1" />
-                                  Join Call
+                                  Join
                                 </Button>
                               )}
                               <EditAppointmentDialog appointment={apt} onSuccess={fetchAppointments}>
-                                <Button variant="ghost" size="sm" className="h-8 px-3 rounded-lg hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all font-bold text-xs uppercase tracking-widest">
+                                <Button variant="ghost" size="sm" className="h-7 px-2 rounded-lg hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all font-bold text-[10px] uppercase tracking-widest" title="Edit Appointment">
                                   Edit
                                 </Button>
                               </EditAppointmentDialog>
@@ -422,7 +568,7 @@ export default function AppointmentsPage() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center text-slate-500 py-12 font-medium">
+                        <TableCell colSpan={10} className="text-center text-slate-500 py-12 font-medium">
                           No upcoming appointments found
                         </TableCell>
                       </TableRow>

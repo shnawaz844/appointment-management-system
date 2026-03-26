@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export function CreateAppointmentDialog({ children, onSuccess, preselectedPatientId }: { children: React.ReactNode, onSuccess?: () => void, preselectedPatientId?: string }) {
   const [open, setOpen] = useState(false)
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [patients, setPatients] = useState<any[]>([])
   const [mounted, setMounted] = useState(false)
@@ -198,6 +200,7 @@ export function CreateAppointmentDialog({ children, onSuccess, preselectedPatien
           visitType: "",
           notes: "",
         })
+        router.refresh()
         if (onSuccess) onSuccess()
       } else {
         alert("Failed to create appointment")

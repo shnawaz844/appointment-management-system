@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
+import { Loader2, User, Calendar, Smartphone, Mail, Stethoscope, FileText, ChevronRight, ChevronLeft, Activity, Info, AlertCircle, Upload } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 export function AddPatientDialog({ children, onSuccess }: { children: React.ReactNode, onSuccess?: () => void }) {
@@ -107,6 +108,20 @@ export function AddPatientDialog({ children, onSuccess }: { children: React.Reac
       const now = new Date()
       const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
+      let reportUrl = ""
+      if (formData.reportFile) {
+        const uploadData = new FormData()
+        uploadData.append("file", formData.reportFile)
+        uploadData.append("bucket", "uploads")
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: uploadData })
+        if (uploadRes.ok) {
+          const uploadJson = await uploadRes.json()
+          reportUrl = uploadJson.url
+        } else {
+          alert("Failed to upload report file. Proceeding without file.")
+        }
+      }
+
       const payload = {
         id: `P${Math.floor(1000 + Math.random() * 9000).toString()}`,
         name: formData.name,
@@ -124,6 +139,7 @@ export function AddPatientDialog({ children, onSuccess }: { children: React.Reac
         injuryDate: now.toISOString().split('T')[0],
         surgeryRequired: false,
         physicalTherapy: false,
+        reportUrl: reportUrl,
       }
 
       const response = await fetch("/api/patients", {
@@ -166,232 +182,323 @@ export function AddPatientDialog({ children, onSuccess }: { children: React.Reac
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl p-0">
-        <DialogHeader className="px-8 pt-8 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">Add New Patient <span className="text-sm font-bold text-slate-400 ml-2 uppercase tracking-widest">Step {step} of 3</span></DialogTitle>
+      <DialogContent className="max-w-2xl h-[90vh] bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-slate-200/50 dark:border-white/10 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.2)] rounded-[2.5rem] p-0 overflow-hidden border">
+        <DialogHeader className="px-8 pt-8 pb-6 bg-linear-to-r from-emerald-600/10 via-transparent to-blue-600/10 border-b border-slate-100 dark:border-white/5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl -mr-16 -mt-16 rounded-full" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 blur-3xl -ml-12 -mb-12 rounded-full" />
+          <div className="flex items-center justify-between relative">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-[#e05d38] rounded-2xl shadow-lg shadow-emerald-500/20 text-white">
+                <User className="w-6 h-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Add Patient</DialogTitle>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">Register a new patient to the system</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 bg-white/50 dark:bg-slate-900/50 px-3 py-1.5 rounded-full border border-slate-200/50 dark:border-white/5">
+              {[1, 2, 3].map((s) => (
+                <div
+                  key={s}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-all duration-300",
+                    s === step ? "w-6 bg-[#e05d38]" : s < step ? "bg-[#e05d38]" : "bg-slate-300 dark:bg-slate-700"
+                  )}
+                />
+              ))}
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Step {step}/3</span>
+            </div>
+          </div>
         </DialogHeader>
 
         {dataLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 space-y-4">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="font-bold text-muted-foreground animate-pulse uppercase tracking-widest text-xs">Loading Resources...</p>
+          <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-emerald-100 dark:border-emerald-900/30 rounded-full animate-pulse" />
+              <Loader2 className="h-8 w-8 animate-spin text-emerald-600 absolute top-4 left-4" />
+            </div>
+            <p className="font-bold text-slate-400 animate-pulse uppercase tracking-[0.2em] text-[10px]">Synchronizing Resources...</p>
           </div>
         ) : (
-          <div className="p-8 space-y-6">
-            {step === 1 && (
-              <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Personal Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className={cn("text-xs font-bold", errors.name ? "text-destructive" : "text-slate-700 dark:text-slate-300")}>Full Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Enter full name"
-                      className={cn("h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800", errors.name ? "border-destructive animate-shake" : "")}
-                    />
-                    {errors.name && <p className="text-[10px] font-bold text-destructive uppercase tracking-tight">{errors.name}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="age" className={cn("text-xs font-bold", errors.age ? "text-destructive" : "text-slate-700 dark:text-slate-300")}>Age *</Label>
-                    <Input
-                      id="age"
-                      type="number"
-                      value={formData.age}
-                      onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                      placeholder="32"
-                      className={cn("h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800", errors.age ? "border-destructive animate-shake" : "")}
-                    />
-                    {errors.age && <p className="text-[10px] font-bold text-destructive uppercase tracking-tight">{errors.age}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gender" className={cn("text-xs font-bold", errors.gender ? "text-destructive" : "text-slate-700 dark:text-slate-300")}>Gender *</Label>
-                    <Select value={formData.gender || undefined} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
-                      <SelectTrigger id="gender" className={cn("h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800", errors.gender ? "border-destructive animate-shake" : "")}>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Others">Others</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.gender && <p className="text-[10px] font-bold text-destructive uppercase tracking-tight">{errors.gender}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className={cn("text-xs font-bold", errors.phone ? "text-destructive" : "text-slate-700 dark:text-slate-300")}>Phone *</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+91-0000000000"
-                      className={cn("h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800", errors.phone ? "border-destructive animate-shake" : "")}
-                    />
-                    {errors.phone && <p className="text-[10px] font-bold text-destructive uppercase tracking-tight">{errors.phone}</p>}
-                  </div>
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="email" className="text-xs font-bold text-slate-700 dark:text-slate-300">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="example@email.com"
-                      className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="flex flex-col h-[calc(90vh-160px)]">
+            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
+                  {step === 1 && (
+                    <div className="group bg-white/50 dark:bg-slate-900/40 p-6 rounded-4xl border border-slate-200/60 dark:border-white/5 hover:border-emerald-500/30 transition-all duration-300 shadow-sm hover:shadow-md">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl text-[#e05d38] dark:text-[#e05d38] group-hover:scale-110 transition-transform">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest">Personal Information</h4>
+                      </div>
 
-            {step === 2 && (
-              <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Medical Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="diagnosis" className={cn("text-xs font-bold", errors.diagnosis ? "text-destructive" : "text-slate-700 dark:text-slate-300")}>Diagnosis / Specialty *</Label>
-                    <Select value={formData.diagnosis || undefined} onValueChange={(v) => setFormData({ ...formData, diagnosis: v })}>
-                      <SelectTrigger id="diagnosis" className={cn("h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800", errors.diagnosis ? "border-destructive animate-shake" : "")}>
-                        <SelectValue placeholder="Select diagnosis" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {specialties.length > 0 ? (
-                          specialties.map((s) => (
-                            <SelectItem key={s.id || s._id} value={s.name}>{s.name}</SelectItem>
-                          ))
-                        ) : (
-                          <>
-                            <SelectItem value="Knee Osteoarthritis">Knee Osteoarthritis</SelectItem>
-                            <SelectItem value="Lumbar Disc Herniation">Lumbar Disc Herniation</SelectItem>
-                            <SelectItem value="Rotator Cuff Tear">Rotator Cuff Tear</SelectItem>
-                            <SelectItem value="Cervical Spondylosis">Cervical Spondylosis</SelectItem>
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {errors.diagnosis && <p className="text-[10px] font-bold text-destructive uppercase tracking-tight">{errors.diagnosis}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="doctor" className={cn("text-xs font-bold", errors.doctor ? "text-destructive" : "text-slate-700 dark:text-slate-300")}>Attending Doctor *</Label>
-                    <Select
-                      value={formData.doctor || undefined}
-                      onValueChange={(v) => setFormData({ ...formData, doctor: v })}
-                      disabled={currentUser?.role === "DOCTOR"}
-                    >
-                      <SelectTrigger id="doctor" className={cn("h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800", errors.doctor ? "border-destructive animate-shake" : "")}>
-                        <SelectValue placeholder="Select doctor" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {doctors.length > 0 ? (
-                          doctors.map((d) => (
-                            <SelectItem key={d.id || d._id} value={d.name}>{d.name}</SelectItem>
-                          ))
-                        ) : (
-                          <>
-                            <SelectItem value="Dr. Sharma">Dr. Sharma</SelectItem>
-                            <SelectItem value="Dr. Singh">Dr. Singh</SelectItem>
-                            <SelectItem value="Dr. Verma">Dr. Verma</SelectItem>
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {errors.doctor && <p className="text-[10px] font-bold text-destructive uppercase tracking-tight">{errors.doctor}</p>}
-                  </div>
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="laterality" className="text-xs font-bold text-slate-700 dark:text-slate-300">Laterality</Label>
-                    <Select value={formData.laterality || undefined} onValueChange={(v) => setFormData({ ...formData, laterality: v })}>
-                      <SelectTrigger id="laterality" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                        <SelectValue placeholder="Select side" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        <SelectItem value="Right">Right</SelectItem>
-                        <SelectItem value="Left">Left</SelectItem>
-                        <SelectItem value="Bilateral">Bilateral</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="severity" className="text-xs font-bold text-slate-700 dark:text-slate-300">Severity</Label>
-                    <Select value={formData.severity || undefined} onValueChange={(v) => setFormData({ ...formData, severity: v })}>
-                      <SelectTrigger id="severity" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                        <SelectValue placeholder="Select severity" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        <SelectItem value="Mild">Mild</SelectItem>
-                        <SelectItem value="Moderate">Moderate</SelectItem>
-                        <SelectItem value="Severe">Severe</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div> */}
-                </div>
-              </div>
-            )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2.5">
+                          <Label htmlFor="name" className={cn("text-xs font-bold flex items-center gap-2", errors.name ? "text-rose-500" : "text-slate-500 dark:text-slate-400")}>
+                            FULL NAME <span className="text-rose-500">*</span>
+                          </Label>
+                          <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="e.g., John Doe"
+                            className={cn("h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all", errors.name && "border-rose-500/50 bg-rose-50/10")}
+                          />
+                          {errors.name && <p className="text-[10px] font-bold text-rose-500 uppercase tracking-tight flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.name}</p>}
+                        </div>
 
-            {step === 3 && (
-              <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Initial Reports (Optional)</h3>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="reportType" className="text-xs font-bold text-slate-700 dark:text-slate-300">Report Type</Label>
-                    <Select value={formData.reportType || undefined} onValueChange={(v) => setFormData({ ...formData, reportType: v })}>
-                      <SelectTrigger id="reportType" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                        <SelectValue placeholder="Select report type" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        <SelectItem value="X-Ray">X-Ray</SelectItem>
-                        <SelectItem value="MRI">MRI</SelectItem>
-                        <SelectItem value="CT-Scan">CT-Scan</SelectItem>
-                        <SelectItem value="Ultrasound">Ultrasound</SelectItem>
-                        <SelectItem value="Others">Others</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {formData.reportType === "Others" && (
-                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <Label htmlFor="otherReportType" className="text-xs font-bold text-slate-700 dark:text-slate-300">Specify Report Type *</Label>
-                      <Input
-                        id="otherReportType"
-                        value={formData.otherReportType}
-                        onChange={(e) => setFormData({ ...formData, otherReportType: e.target.value })}
-                        placeholder="Enter report type (e.g. Blood Test)"
-                        className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-                      />
+                        <div className="space-y-2.5">
+                          <Label htmlFor="age" className={cn("text-xs font-bold flex items-center gap-2", errors.age ? "text-rose-500" : "text-slate-500 dark:text-slate-400")}>
+                            AGE <span className="text-rose-500">*</span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              id="age"
+                              type="number"
+                              value={formData.age}
+                              onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                              placeholder="32"
+                              className={cn("h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 pl-10", errors.age && "border-rose-500/50 bg-rose-50/10")}
+                            />
+                            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          </div>
+                          {errors.age && <p className="text-[10px] font-bold text-rose-500 uppercase tracking-tight flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.age}</p>}
+                        </div>
+
+                        <div className="space-y-2.5">
+                          <Label htmlFor="gender" className={cn("text-xs font-bold flex items-center gap-2", errors.gender ? "text-rose-500" : "text-slate-500 dark:text-slate-400")}>
+                            GENDER <span className="text-rose-500">*</span>
+                          </Label>
+                          <Select value={formData.gender || undefined} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
+                            <SelectTrigger id="gender" className={cn("h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all", errors.gender && "border-rose-500/50 bg-rose-50/10")}>
+                              <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl border-slate-200/60 dark:border-white/10 backdrop-blur-xl">
+                              <SelectItem value="Male" className="rounded-xl">Male</SelectItem>
+                              <SelectItem value="Female" className="rounded-xl">Female</SelectItem>
+                              <SelectItem value="Others" className="rounded-xl">Others</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {errors.gender && <p className="text-[10px] font-bold text-rose-500 uppercase tracking-tight flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.gender}</p>}
+                        </div>
+
+                        <div className="space-y-2.5">
+                          <Label htmlFor="phone" className={cn("text-xs font-bold flex items-center gap-2", errors.phone ? "text-rose-500" : "text-slate-500 dark:text-slate-400")}>
+                            PHONE <span className="text-rose-500">*</span>
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              id="phone"
+                              value={formData.phone}
+                              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                              placeholder="+91-0000000000"
+                              className={cn("h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 pl-10", errors.phone && "border-rose-500/50 bg-rose-50/10")}
+                            />
+                            <Smartphone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          </div>
+                        </div>
+
+                        <div className="md:col-span-2 space-y-2.5">
+                          <Label htmlFor="email" className="text-xs font-bold text-slate-500 dark:text-slate-400">EMAIL ADDRESS</Label>
+                          <div className="relative">
+                            <Input
+                              id="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                              placeholder="example@email.com"
+                              className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 pl-10 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
+                            />
+                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
-                  <div className="space-y-2">
-                    <Label htmlFor="file" className="text-xs font-bold text-slate-700 dark:text-slate-300">Upload Report</Label>
-                    <Input
-                      id="file"
-                      type="file"
-                      accept=".pdf,.jpg,.png,.dcm"
-                      onChange={(e) => setFormData({ ...formData, reportFile: e.target.files?.[0] || null })}
-                      className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 file:bg-blue-600 file:text-white file:border-none file:rounded-md file:px-3 file:py-1 file:mr-3 file:cursor-pointer hover:file:bg-blue-700 transition-all cursor-pointer"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
 
-            <div className="flex gap-3 justify-end pt-4">
+                  {step === 2 && (
+                    <div className="group bg-white/50 dark:bg-slate-900/40 p-6 rounded-4xl border border-slate-200/60 dark:border-white/5 hover:border-emerald-500/30 transition-all duration-300 shadow-sm hover:shadow-md">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                          <Stethoscope className="w-4 h-4" />
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest">Medical Information</h4>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2.5">
+                          <Label htmlFor="diagnosis" className={cn("text-xs font-bold flex items-center gap-2", errors.diagnosis ? "text-rose-500" : "text-slate-500 dark:text-slate-400")}>
+                            DIAGNOSIS / SPECIALTY <span className="text-rose-500">*</span>
+                          </Label>
+                          <Select value={formData.diagnosis || undefined} onValueChange={(v) => setFormData({ ...formData, diagnosis: v })}>
+                            <SelectTrigger id="diagnosis" className={cn("h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all", errors.diagnosis && "border-rose-500/50 bg-rose-50/10")}>
+                              <SelectValue placeholder="Select diagnosis" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl border-slate-200/60 dark:border-white/10 backdrop-blur-xl">
+                              {specialties.length > 0 ? (
+                                specialties.map((s) => (
+                                  <SelectItem key={s.id || s._id} value={s.name} className="rounded-xl focus:bg-emerald-50 dark:focus:bg-emerald-900/20">{s.name}</SelectItem>
+                                ))
+                              ) : (
+                                ["Knee Osteoarthritis", "Lumbar Disc Herniation", "Rotator Cuff Tear", "Cervical Spondylosis"].map(d => (
+                                  <SelectItem key={d} value={d} className="rounded-xl">{d}</SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          {errors.diagnosis && <p className="text-[10px] font-bold text-rose-500 uppercase tracking-tight flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.diagnosis}</p>}
+                        </div>
+
+                        <div className="space-y-2.5">
+                          <Label htmlFor="doctor" className={cn("text-xs font-bold flex items-center gap-2", errors.doctor ? "text-rose-500" : "text-slate-500 dark:text-slate-400")}>
+                            ATTENDING DOCTOR <span className="text-rose-500">*</span>
+                          </Label>
+                          <Select
+                            value={formData.doctor || undefined}
+                            onValueChange={(v) => setFormData({ ...formData, doctor: v })}
+                            disabled={currentUser?.role === "DOCTOR"}
+                          >
+                            <SelectTrigger id="doctor" className={cn("h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all", errors.doctor && "border-rose-500/50 bg-rose-50/10")}>
+                              <SelectValue placeholder="Select doctor" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl backdrop-blur-xl">
+                              {doctors
+                                .filter(d => {
+                                  if (!formData.diagnosis) return true;
+                                  const docSpec = specialties.find(s => s.id === d.specialty_id || s._id === d.specialty_id);
+                                  return docSpec?.name?.toLowerCase() === formData.diagnosis.toLowerCase();
+                                })
+                                .map((d) => (
+                                <SelectItem key={d.id || d._id} value={d.name} className="rounded-xl">
+                                  <div className="flex items-center gap-2">
+                                    <Stethoscope className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>{d.name}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {errors.doctor && <p className="text-[10px] font-bold text-rose-500 uppercase tracking-tight flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.doctor}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 3 && (
+                    <div className="group bg-white/50 dark:bg-slate-900/40 p-6 rounded-4xl border border-slate-200/60 dark:border-white/5 hover:border-emerald-500/30 transition-all duration-300 shadow-sm hover:shadow-md">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest">Initial Reports (Optional)</h4>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="space-y-2.5">
+                          <Label htmlFor="reportType" className="text-xs font-bold text-slate-500 dark:text-slate-400">REPORT TYPE</Label>
+                          <Select value={formData.reportType || undefined} onValueChange={(v) => setFormData({ ...formData, reportType: v })}>
+                            <SelectTrigger id="reportType" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                              <SelectValue placeholder="Select report type" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl backdrop-blur-xl">
+                              {["X-Ray", "MRI", "CT-Scan", "Ultrasound", "Others", "Physical Therapy", "Echocardiogram", "EEG", "EMG", "Nerve Conduction Study", "Bone Density Scan", "Mammography"].map(r => (
+                                <SelectItem key={r} value={r} className="rounded-xl">{r}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {formData.reportType === "Others" && (
+                          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2.5">
+                            <Label htmlFor="otherReportType" className="text-xs font-bold text-slate-500 dark:text-slate-400">SPECIFY TYPE <span className="text-rose-500">*</span></Label>
+                            <Input
+                              id="otherReportType"
+                              value={formData.otherReportType}
+                              onChange={(e) => setFormData({ ...formData, otherReportType: e.target.value })}
+                              placeholder="e.g., Blood Test"
+                              className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5"
+                            />
+                          </motion.div>
+                        )}
+
+                        <div className="space-y-2.5">
+                          <Label htmlFor="file" className="text-xs font-bold text-slate-500 dark:text-slate-400">UPLOAD REPORT</Label>
+                          <div className="relative group/upload">
+                            <Input
+                              id="file"
+                              type="file"
+                              accept=".pdf,.jpg,.png,.dcm"
+                              onChange={(e) => setFormData({ ...formData, reportFile: e.target.files?.[0] || null })}
+                              className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 cursor-pointer file:cursor-pointer p-[0.4rem] file:h-full file:border-0 file:bg-emerald-100 file:dark:bg-emerald-900/30 file:text-emerald-700 file:dark:text-emerald-300 file:rounded-xl file:px-4 file:mr-3 transition-all"
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 group-hover/upload:opacity-100 transition-opacity">
+                              <Upload className="w-4 h-4 text-emerald-600" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <div className="flex gap-4 justify-end px-8 py-5 bg-white/50 dark:bg-slate-900/60 backdrop-blur-xl border-t border-slate-100 dark:border-white/5 items-center">
               {step > 1 && (
-                <Button variant="outline" onClick={handlePrevious} disabled={loading} className="rounded-xl h-11 px-6 font-bold">
+                <Button
+                  variant="ghost"
+                  onClick={handlePrevious}
+                  disabled={loading}
+                  className="rounded-2xl h-12 px-6 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4" />
                   Previous
                 </Button>
               )}
+
+              <div className="flex-1" />
+
+              <Button
+                variant="ghost"
+                onClick={() => setOpen(false)}
+                className="rounded-2xl h-12 px-6 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+
               {step < 3 ? (
-                <Button onClick={handleNext} className="rounded-xl h-11 px-6 font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25">
-                  Next Step
+                <Button
+                  onClick={handleNext}
+                  className="rounded-2xl h-12 px-8 font-extrabold bg-linear-to-r from-[#e05d38] to-[#e05d38] hover:from-[#e05d38] hover:to-[#e05d38] text-white shadow-[0_10px_20px_-10px_rgba(16,185,129,0.4)] hover:shadow-[0_15px_30px_-10px_rgba(16,185,129,0.5)] transition-all duration-300 flex items-center gap-2 min-w-[140px]"
+                >
+                  <span>Next Step</span>
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               ) : (
-                <Button onClick={handleSubmit} disabled={loading} className="rounded-xl h-11 px-6 font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="rounded-2xl h-12 px-8 font-extrabold bg-linear-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.4)] hover:shadow-[0_15px_30px_-10px_rgba(79,70,229,0.5)] transition-all duration-300 flex items-center gap-2 min-w-[180px]"
+                >
                   {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adding Patient...
-                    </>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Registering...</span>
+                    </div>
                   ) : (
-                    "Complete Registration"
+                    <>
+                      <span>Complete Registration</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </>
                   )}
                 </Button>
               )}

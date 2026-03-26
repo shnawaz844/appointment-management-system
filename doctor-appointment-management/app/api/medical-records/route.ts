@@ -9,7 +9,7 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        let query = supabase.from("medical_records").select("*").order("created_at", { ascending: false })
+        let query = supabase.from("medicalrecords").select("*").order("created_at", { ascending: false })
 
         if (session.role === "DOCTOR") {
             query = query.ilike("doctor", session.name.trim())
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
             summary: body.summary,
         }
 
-        const { data, error } = await supabase.from("medical_records").insert(mrData).select().single()
+        const { data, error } = await supabase.from("medicalrecords").insert(mrData).select().single()
         if (error) throw error
         return NextResponse.json(data, { status: 201 })
     } catch (error) {

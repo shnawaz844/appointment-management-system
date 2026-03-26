@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Plus, UserPlus } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function DoctorsPage() {
     const [doctors, setDoctors] = useState<any[]>([])
@@ -169,21 +170,23 @@ export default function DoctorsPage() {
                                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                                 </div>
                             ) : (
-                                <div className="space-y-2">
-                                    {doctors.length === 0 ? (
-                                        <p className="text-sm text-muted-foreground italic">No doctors found.</p>
-                                    ) : (
-                                        doctors.map((d) => (
-                                            <div key={d.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                                <div>
-                                                    <p className="font-medium">{d.name}</p>
-                                                    <p className="text-xs text-primary font-semibold">{getspecialtyName(d.specialty_id)}</p>
-                                                    <p className="text-xs text-muted-foreground">{d.email || d.phone || "No contact info"}</p>
+                                <ScrollArea className="h-[400px] pr-4">
+                                    <div className="space-y-2">
+                                        {doctors.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground italic">No doctors found.</p>
+                                        ) : (
+                                            doctors.map((d) => (
+                                                <div key={d.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                                    <div>
+                                                        <p className="font-medium">{d.name}</p>
+                                                        <p className="text-xs text-primary font-semibold">{getspecialtyName(d.specialty_id)}</p>
+                                                        <p className="text-xs text-muted-foreground">{d.email || d.phone || "No contact info"}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </ScrollArea>
                             )}
                         </CardContent>
                     </Card>

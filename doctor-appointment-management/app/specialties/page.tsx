@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2, Plus, Trash2 } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function SpecialtiesPage() {
     const [specialties, setSpecialties] = useState<any[]>([])
@@ -101,20 +102,22 @@ export default function SpecialtiesPage() {
                                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                                 </div>
                             ) : (
-                                <div className="space-y-2">
-                                    {specialties.length === 0 ? (
-                                        <p className="text-sm text-muted-foreground italic">No specialties found.</p>
-                                    ) : (
-                                        specialties.map((s) => (
-                                            <div key={s.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                                <div>
-                                                    <p className="font-medium">{s.name}</p>
-                                                    {s.description && <p className="text-xs text-muted-foreground">{s.description}</p>}
+                                <ScrollArea className="h-[400px] pr-4">
+                                    <div className="space-y-2">
+                                        {specialties.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground italic">No specialties found.</p>
+                                        ) : (
+                                            specialties.map((s) => (
+                                                <div key={s.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                                    <div>
+                                                        <p className="font-medium">{s.name}</p>
+                                                        {s.description && <p className="text-xs text-muted-foreground">{s.description}</p>}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </ScrollArea>
                             )}
                         </CardContent>
                     </Card>

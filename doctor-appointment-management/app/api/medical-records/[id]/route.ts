@@ -31,3 +31,26 @@ export async function PATCH(
         return NextResponse.json({ error: "Failed to update medical record" }, { status: 500 })
     }
 }
+
+export async function DELETE(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params
+        const { error } = await supabase
+            .from("medicalrecords")
+            .delete()
+            .eq("id", id)
+
+        if (error) {
+            console.error("Supabase delete error:", error)
+            return NextResponse.json({ error: "Failed to delete medical record" }, { status: 500 })
+        }
+
+        return NextResponse.json({ message: "Medical record deleted successfully" })
+    } catch (error) {
+        console.error("Failed to delete medical record:", error)
+        return NextResponse.json({ error: "Failed to delete medical record" }, { status: 500 })
+    }
+}

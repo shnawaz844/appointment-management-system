@@ -23,14 +23,14 @@ export interface Report {
   id: string
   patientId: string
   type:
-    | "MRI"
-    | "X-Ray"
-    | "CT-Scan"
-    | "Ultrasound"
-    | "Physical Therapy"
-    | "Surgical Notes"
-    | "Prescription"
-    | "Discharge"
+  | "MRI"
+  | "X-Ray"
+  | "CT-Scan"
+  | "Ultrasound"
+  | "Physical Therapy"
+  | "Surgical Notes"
+  | "Prescription"
+  | "Discharge"
   name: string
   date: string
   path: string

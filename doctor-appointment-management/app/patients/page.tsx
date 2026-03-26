@@ -175,6 +175,7 @@ export default function PatientsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10">S.no</TableHead>
                         <TableHead>OPD No</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Age</TableHead>
@@ -188,8 +189,9 @@ export default function PatientsPage() {
                     </TableHeader>
                     <TableBody>
                       {paginatedPatients.length > 0 ? (
-                        paginatedPatients.map((patient) => (
+                        paginatedPatients.map((patient, index) => (
                           <TableRow key={patient.id}>
+                            <TableCell className="font-mono text-[11px] text-muted-foreground">{startIndex + index + 1}</TableCell>
                             <TableCell className="font-mono text-sm font-medium">{patient.id}</TableCell>
                             <TableCell className="font-medium">{patient.name}</TableCell>
                             <TableCell>{patient.age}</TableCell>
@@ -214,7 +216,7 @@ export default function PatientsPage() {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                          <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                             No patients found matching your criteria
                           </TableCell>
                         </TableRow>

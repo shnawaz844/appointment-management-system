@@ -9,7 +9,7 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        let query = supabase.from("imaging_studies").select("*").order("date", { ascending: false })
+        let query = supabase.from("imagingstudies").select("*").order("date", { ascending: false })
 
         if (session.role === "DOCTOR") {
             query = query.ilike("doctor", session.name.trim())
@@ -48,11 +48,14 @@ export async function POST(request: Request) {
             thumbnail: body.thumbnail || "/placeholder.svg",
         }
 
-        const { data, error } = await supabase.from("imaging_studies").insert(imgData).select().single()
+        const { data, error } = await supabase.from("imagingstudies").insert(imgData).select().single()
         if (error) throw error
         return NextResponse.json(data, { status: 201 })
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to create imaging study:", error)
-        return NextResponse.json({ error: "Failed to create imaging study" }, { status: 500 })
+        return NextResponse.json({
+            error: "Failed to create imaging study",
+            details: error.message || "Unknown error"
+        }, { status: 500 })
     }
 }

@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2, Scan, Activity, Calendar, Stethoscope, Image as ImageIcon, Upload, ChevronRight, AlertCircle, User } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
     Command,
@@ -33,44 +35,147 @@ interface Doctor {
     _id: string
     id: string
     name: string
+    email?: string
+    specialties?: {
+        name: string
+    }
 }
 
 interface CreateImagingDialogProps {
     children: React.ReactNode
     onCreated?: () => void
+    preselectedPatientId?: string
+    preselectedPatientName?: string
+    preselectedDoctor?: string
 }
 
-export function CreateImagingDialog({ children, onCreated }: CreateImagingDialogProps) {
+const SPECIALTY_BODY_PARTS: Record<string, string[]> = {
+    "Cardiology": ["Heart", "Eco Heart", "Chest", "Aorta", "Other"],
+    "Orthopedics": ["Knee", "Lumbar Spine", "Cervical Spine", "Shoulder", "Ankle", "Hip", "Wrist", "Elbow", "Foot", "Thoracic Spine", "Other"],
+    "Neurology": ["Brain", "Neck", "Cervical Spine", "Lumbar Spine", "Other"],
+    "General": ["Knee", "Lumbar Spine", "Cervical Spine", "Shoulder", "Ankle", "Hip", "Wrist", "Elbow", "Foot", "Thoracic Spine", "Heart", "Eco Heart", "Chest", "Brain", "Abdomen", "Pelvis", "Neck", "Other"]
+}
+
+const SPECIALTY_MODALITIES: Record<string, string[]> = {
+    "Cardiology": ["ECG", "Echocardiogram", "Stress Test", "Holter Monitor", "CT", "MRI", "Ultrasound", "Other"],
+    "Orthopedics": ["X-Ray", "CT", "MRI", "Ultrasound", "Other"],
+    "Neurology": ["MRI", "CT", "EEG", "EMG", "Other"],
+    "General": ["X-Ray", "CT", "MRI", "Ultrasound", "ECG", "Echocardiogram", "EEG", "Other"]
+}
+
+const MODALITY_DISPLAY_NAMES: Record<string, string> = {
+    "CT": "CT Scan",
+    "Echocardiogram": "Echocardiogram (Ultrasound)",
+    "ECG": "ECG (Electrocardiogram)",
+    "EEG": "EEG (Electroencephalogram)",
+    "EMG": "EMG (Electromyogram)",
+}
+
+const MODALITY_DB_MAPPING: Record<string, string> = {
+    "Echocardiogram": "Ultrasound",
+    "ECG": "Other",
+    "EEG": "Other",
+    "EMG": "Other",
+    "Stress Test": "Other",
+    "Holter Monitor": "Other",
+}
+
+const DEFAULT_BODY_PARTS = SPECIALTY_BODY_PARTS["General"]
+const DEFAULT_MODALITIES = SPECIALTY_MODALITIES["General"]
+
+export function CreateImagingDialog({
+    children,
+    onCreated,
+    preselectedPatientId,
+    preselectedPatientName,
+    preselectedDoctor
+}: CreateImagingDialogProps) {
     const [open, setOpen] = useState(false)
+    const router = useRouter()
     const [loading, setLoading] = useState(false)
-    const [patientName, setPatientName] = useState("")
-    const [patientId, setPatientId] = useState("")
+    const [patientName, setPatientName] = useState(preselectedPatientName || "")
+    const [patientId, setPatientId] = useState(preselectedPatientId || "")
     const [studyType, setStudyType] = useState("")
     const [bodyPart, setBodyPart] = useState("")
     const [modality, setModality] = useState("")
     const [date, setDate] = useState(new Date().toISOString().split("T")[0])
     const [aiFlag, setAiFlag] = useState("Normal")
-    const [doctor, setDoctor] = useState("")
+    const [doctor, setDoctor] = useState(preselectedDoctor || "")
     const [thumbnail, setThumbnail] = useState<string>("")
+    const [imageFile, setImageFile] = useState<File | null>(null)
 
     const [patients, setPatients] = useState<Patient[]>([])
     const [doctors, setDoctors] = useState<Doctor[]>([])
     const [loadingData, setLoadingData] = useState(false)
     const [comboOpen, setComboOpen] = useState(false)
+    const [currentUser, setCurrentUser] = useState<any>(null)
+    const [currentSpecialty, setCurrentSpecialty] = useState<string>("General")
+
+    useEffect(() => {
+        if (open) {
+            if (preselectedPatientName) setPatientName(preselectedPatientName)
+            if (preselectedPatientId) setPatientId(preselectedPatientId)
+            if (preselectedDoctor) setDoctor(preselectedDoctor)
+        }
+    }, [open, preselectedPatientName, preselectedPatientId, preselectedDoctor])
 
     useEffect(() => {
         if (!open) return
         const fetchData = async () => {
             setLoadingData(true)
             try {
-                const [patientsRes, doctorsRes] = await Promise.all([
+                const [patientsRes, doctorsRes, meRes] = await Promise.all([
                     fetch("/api/patients"),
-                    fetch("/api/doctors")
+                    fetch("/api/doctors"),
+                    fetch("/api/auth/me")
                 ])
-                if (patientsRes.ok) setPatients(await patientsRes.json())
-                if (doctorsRes.ok) setDoctors(await doctorsRes.json())
+
+                let fetchedPatients: Patient[] = []
+                let fetchedDoctors: Doctor[] = []
+
+                if (patientsRes.ok) {
+                    fetchedPatients = await patientsRes.json()
+                    setPatients(fetchedPatients)
+                }
+                if (doctorsRes.ok) {
+                    fetchedDoctors = await doctorsRes.json()
+                    setDoctors(fetchedDoctors)
+                }
+
+                if (meRes.ok) {
+                    const meData = await meRes.json()
+                    const user = meData.user
+                    setCurrentUser(user)
+
+                    // Find specialty and doctor for current user
+                    let foundDoc = fetchedDoctors.find(d =>
+                        d.name.toLowerCase().trim() === user.name.toLowerCase().trim() ||
+                        d.email?.toLowerCase().trim() === user.email?.toLowerCase().trim()
+                    )
+
+                    if (user.role === "DOCTOR" && foundDoc) {
+                        if (foundDoc.specialties?.name) {
+                            setCurrentSpecialty(foundDoc.specialties.name)
+                        }
+                        // Always prioritize current doctor if they are adding a study
+                        setDoctor(foundDoc.name)
+                    } else {
+                        // If not a doctor, use patient's doctor or current selection if valid
+                        const pId = preselectedPatientId || patientId
+                        const currentPatient = fetchedPatients.find((p: any) => p.id === pId || p._id === pId)
+                        const targetDoctorName = currentPatient?.doctor || doctor || preselectedDoctor || ""
+
+                        // Ensure the selected doctor exists in the list
+                        const validDoc = fetchedDoctors.find(d =>
+                            d.name.toLowerCase().trim() === targetDoctorName.toLowerCase().trim()
+                        )
+                        if (validDoc) {
+                            setDoctor(validDoc.name)
+                        }
+                    }
+                }
             } catch (error) {
-                console.error("Failed to fetch patients or doctors:", error)
+                console.error("Failed to fetch data:", error)
             } finally {
                 setLoadingData(false)
             }
@@ -79,21 +184,44 @@ export function CreateImagingDialog({ children, onCreated }: CreateImagingDialog
     }, [open])
 
     const resetForm = () => {
-        setPatientName("")
-        setPatientId("")
+        setPatientName(preselectedPatientName || "")
+        setPatientId(preselectedPatientId || "")
         setStudyType("")
         setBodyPart("")
         setModality("")
         setDate(new Date().toISOString().split("T")[0])
         setAiFlag("Normal")
-        setDoctor("")
+        setDoctor(preselectedDoctor || "")
         setThumbnail("")
+        setImageFile(null)
     }
 
     const handleSubmit = async () => {
         if (!patientName || !patientId || !studyType || !bodyPart || !modality) return
         setLoading(true)
         try {
+            let finalThumbnailUrl = "/placeholder.svg"
+            if (imageFile) {
+                const formData = new FormData()
+                formData.append("file", imageFile)
+                formData.append("bucket", "uploads")
+
+                const uploadRes = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData
+                })
+
+                if (uploadRes.ok) {
+                    const uploadData = await uploadRes.json()
+                    finalThumbnailUrl = uploadData.url
+                } else {
+                    console.error("Failed to upload image")
+                    alert("Failed to upload image. Please try again.")
+                    setLoading(false)
+                    return
+                }
+            }
+
             const res = await fetch("/api/imaging", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -102,20 +230,25 @@ export function CreateImagingDialog({ children, onCreated }: CreateImagingDialog
                     patientId,
                     studyType,
                     bodyPart,
-                    modality,
+                    modality: MODALITY_DB_MAPPING[modality] || modality,
                     date,
                     aiFlag,
                     doctor,
-                    thumbnail,
+                    thumbnail: finalThumbnailUrl,
                 }),
             })
             if (res.ok) {
                 setOpen(false)
                 resetForm()
+                router.refresh()
                 onCreated?.()
+            } else {
+                const errData = await res.json()
+                alert(`Error: ${errData.details || "Failed to create imaging study"}`)
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to create imaging study:", error)
+            alert(`Failed to create: ${error.message}`)
         } finally {
             setLoading(false)
         }
@@ -123,6 +256,7 @@ export function CreateImagingDialog({ children, onCreated }: CreateImagingDialog
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
+            setImageFile(file)
             const reader = new FileReader()
             reader.onloadend = () => {
                 setThumbnail(reader.result as string)
@@ -134,178 +268,273 @@ export function CreateImagingDialog({ children, onCreated }: CreateImagingDialog
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl p-0">
-                <DialogHeader className="px-8 pt-8 pb-4 border-b border-slate-100 dark:border-slate-800">
-                    <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">Add Imaging Study</DialogTitle>
+            <DialogContent className="max-w-3xl h-[90vh] bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-slate-200/50 dark:border-white/10 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.2)] rounded-[2.5rem] p-0 overflow-hidden border">
+                <DialogHeader className="px-8 pt-8 pb-6 bg-linear-to-r from-purple-600/10 via-transparent to-pink-600/10 border-b border-slate-100 dark:border-white/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl -mr-16 -mt-16 rounded-full" />
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-pink-500/10 blur-3xl -ml-12 -mb-12 rounded-full" />
+                    <div className="flex items-center gap-4 relative">
+                        <div className="p-3 bg-[#e05d38] rounded-2xl shadow-lg shadow-purple-500/20 text-white">
+                            <Scan className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">New Imaging Study</DialogTitle>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">Register a new radiology or imaging diagnostic</p>
+                        </div>
+                    </div>
                 </DialogHeader>
-                <div className="space-y-6 p-8">
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Patient Details</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="patientName" className="text-xs font-bold text-slate-700 dark:text-slate-300">Patient Name *</Label>
-                                <Select
-                                    value={patientName}
-                                    onValueChange={(value) => {
-                                        setPatientName(value)
-                                        const patient = patients.find((p) => p.name === value)
-                                        if (patient) {
-                                            setPatientId(patient.id || patient._id)
-                                            if (patient.doctor) {
-                                                setDoctor(patient.doctor)
-                                            }
-                                        }
-                                    }}
-                                    disabled={loadingData}
-                                >
-                                    <SelectTrigger id="patientName" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                                        <SelectValue placeholder={loadingData ? "Loading..." : "Select patient"} />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl">
-                                        {patients.map((p) => (
-                                            <SelectItem key={p.id || p._id} value={p.name}>
-                                                {p.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="patientId" className="text-xs font-bold text-slate-700 dark:text-slate-300">Patient ID</Label>
-                                <Input
-                                    id="patientId"
-                                    value={patientId}
-                                    readOnly
-                                    className="h-11 rounded-xl bg-muted/50 border-slate-200 dark:border-slate-800"
-                                    placeholder="Auto-populated"
-                                />
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Study Information</h4>
-                        <div className="space-y-2">
-                            <Label htmlFor="studyType" className="text-xs font-bold text-slate-700 dark:text-slate-300">Study Type *</Label>
-                            <Input
-                                id="studyType"
-                                value={studyType}
-                                onChange={(e) => setStudyType(e.target.value)}
-                                placeholder="e.g., Knee X-Ray (AP & Lateral)"
-                                className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-                            />
+                {loadingData ? (
+                    <div className="flex flex-col items-center justify-center py-24 space-y-4">
+                        <div className="relative">
+                            <div className="w-16 h-16 border-4 border-purple-100 dark:border-purple-900/30 rounded-full animate-pulse" />
+                            <Loader2 className="h-8 w-8 animate-spin text-purple-600 absolute top-4 left-4" />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="bodyPart" className="text-xs font-bold text-slate-700 dark:text-slate-300">Body Part *</Label>
-                                <Select value={bodyPart} onValueChange={setBodyPart}>
-                                    <SelectTrigger id="bodyPart" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                                        <SelectValue placeholder="Select body part" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl">
-                                        <SelectItem value="Knee">Knee</SelectItem>
-                                        <SelectItem value="Lumbar Spine">Lumbar Spine</SelectItem>
-                                        <SelectItem value="Cervical Spine">Cervical Spine</SelectItem>
-                                        <SelectItem value="Shoulder">Shoulder</SelectItem>
-                                        <SelectItem value="Ankle">Ankle</SelectItem>
-                                        <SelectItem value="Hip">Hip</SelectItem>
-                                        <SelectItem value="Wrist">Wrist</SelectItem>
-                                        <SelectItem value="Elbow">Elbow</SelectItem>
-                                        <SelectItem value="Foot">Foot</SelectItem>
-                                        <SelectItem value="Thoracic Spine">Thoracic Spine</SelectItem>
-                                        <SelectItem value="Other">Other</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="modality" className="text-xs font-bold text-slate-700 dark:text-slate-300">Modality *</Label>
-                                <Select value={modality} onValueChange={setModality}>
-                                    <SelectTrigger id="modality" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                                        <SelectValue placeholder="Select modality" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl">
-                                        <SelectItem value="X-Ray">X-Ray</SelectItem>
-                                        <SelectItem value="CT">CT Scan</SelectItem>
-                                        <SelectItem value="MRI">MRI</SelectItem>
-                                        <SelectItem value="Ultrasound">Ultrasound</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="date" className="text-xs font-bold text-slate-700 dark:text-slate-300">Study Date *</Label>
-                                <Input
-                                    id="date"
-                                    type="date"
-                                    value={date}
-                                    onChange={(e) => setDate(e.target.value)}
-                                    className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="doctor" className="text-xs font-bold text-slate-700 dark:text-slate-300">Assign Doctor *</Label>
-                                <Select value={doctor} onValueChange={setDoctor}>
-                                    <SelectTrigger id="doctor" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                                        <SelectValue placeholder="Select doctor" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl">
-                                        {doctors.map((doc) => (
-                                            <SelectItem key={doc._id} value={doc.name}>
-                                                {doc.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+                        <p className="font-bold text-slate-400 animate-pulse uppercase tracking-[0.2em] text-[10px]">Synchronizing Imaging Data...</p>
                     </div>
+                ) : (
+                    <div className="flex flex-col h-[calc(90vh-160px)]">
+                        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4 }}
+                                className="space-y-8"
+                            >
+                                {/* Patient Context */}
+                                <div className="group bg-white/50 dark:bg-slate-900/40 p-6 rounded-4xl border border-slate-200/60 dark:border-white/5 hover:border-purple-500/30 transition-all duration-300 shadow-sm hover:shadow-md">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                                            <User className="w-4 h-4" />
+                                        </div>
+                                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest">Patient Details</h4>
+                                    </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Additional Details</h4>
-                        <div className="space-y-2">
-                            <Label htmlFor="aiFlag" className="text-xs font-bold text-slate-700 dark:text-slate-300">Analysis Result</Label>
-                            <Select value={aiFlag} onValueChange={setAiFlag}>
-                                <SelectTrigger id="aiFlag" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                                    <SelectValue placeholder="Select result" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl">
-                                    <SelectItem value="Normal">Normal</SelectItem>
-                                    <SelectItem value="Abnormal">Abnormal</SelectItem>
-                                    <SelectItem value="Requires Review">Requires Review</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="imageUpload" className="text-xs font-bold text-slate-700 dark:text-slate-300">Upload Image (Optional)</Label>
-                            <Input
-                                id="imageUpload"
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                                className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 cursor-pointer file:cursor-pointer p-[0.4rem] file:h-full file:border-0 file:bg-slate-100 file:dark:bg-slate-800 file:text-slate-700 file:dark:text-slate-300 file:rounded-md file:px-3 file:mr-3"
-                            />
-                            {thumbnail && (
-                                <div className="mt-2 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-2 h-32">
-                                    <img src={thumbnail} alt="Preview" className="max-h-full object-contain" />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2.5">
+                                            <Label htmlFor="patientName" className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                                SELECT PATIENT <span className="text-rose-500">*</span>
+                                            </Label>
+                                            <Select
+                                                value={patientName}
+                                                onValueChange={(value) => {
+                                                    setPatientName(value)
+                                                    const patient = patients.find((p) => p.name === value)
+                                                    if (patient) {
+                                                        setPatientId(patient.id || patient._id)
+                                                        if (patient.doctor) {
+                                                            setDoctor(patient.doctor)
+                                                        }
+                                                    }
+                                                }}
+                                            >
+                                                <SelectTrigger id="patientName" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-purple-500/20 focus:border-purple-500/50 transition-all">
+                                                    <SelectValue placeholder="Select patient" />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-2xl border-slate-200/60 dark:border-white/10 backdrop-blur-xl">
+                                                    {patients.map((p) => (
+                                                        <SelectItem key={p.id || p._id} value={p.name} className="rounded-xl">
+                                                            {p.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2.5">
+                                            <Label htmlFor="patientId" className="text-xs font-bold text-slate-500 dark:text-slate-400">PATIENT ID</Label>
+                                            <Input
+                                                id="patientId"
+                                                value={patientId}
+                                                readOnly
+                                                className="h-12 rounded-2xl bg-slate-100/50 dark:bg-slate-800/50 border-transparent font-mono text-xs cursor-not-allowed"
+                                                placeholder="Auto-populated"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
+
+                                {/* Study Details */}
+                                <div className="group bg-white/50 dark:bg-slate-900/40 p-6 rounded-4xl border border-slate-200/60 dark:border-white/5 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-md">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                                            <Activity className="w-4 h-4" />
+                                        </div>
+                                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest">Study Information</h4>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="space-y-2.5">
+                                            <Label htmlFor="studyType" className="text-xs font-bold text-slate-500 dark:text-slate-400">STUDY DESCRIPTION <span className="text-rose-500">*</span></Label>
+                                            <Input
+                                                id="studyType"
+                                                value={studyType}
+                                                onChange={(e) => setStudyType(e.target.value)}
+                                                placeholder="e.g., Knee X-Ray (AP & Lateral)"
+                                                className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5"
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2.5">
+                                                <Label htmlFor="bodyPart" className="text-xs font-bold text-slate-500 dark:text-slate-400">BODY PART <span className="text-rose-500">*</span></Label>
+                                                <Select value={bodyPart} onValueChange={setBodyPart}>
+                                                    <SelectTrigger id="bodyPart" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                                                        <SelectValue placeholder="Select body part" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-2xl backdrop-blur-xl">
+                                                        {(SPECIALTY_BODY_PARTS[currentSpecialty] || DEFAULT_BODY_PARTS).map((part) => (
+                                                            <SelectItem key={part} value={part} className="rounded-xl">{part}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-2.5">
+                                                <Label htmlFor="modality" className="text-xs font-bold text-slate-500 dark:text-slate-400">MODALITY <span className="text-rose-500">*</span></Label>
+                                                <Select value={modality} onValueChange={setModality}>
+                                                    <SelectTrigger id="modality" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                                                        <SelectValue placeholder="Select modality" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-2xl backdrop-blur-xl">
+                                                        {(SPECIALTY_MODALITIES[currentSpecialty] || DEFAULT_MODALITIES).map((m) => (
+                                                            <SelectItem key={m} value={m} className="rounded-xl">{MODALITY_DISPLAY_NAMES[m] || m}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2.5">
+                                                <Label htmlFor="date" className="text-xs font-bold text-slate-500 dark:text-slate-400">STUDY DATE <span className="text-rose-500">*</span></Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="date"
+                                                        type="date"
+                                                        value={date}
+                                                        onChange={(e) => setDate(e.target.value)}
+                                                        className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 pl-10"
+                                                    />
+                                                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2.5">
+                                                <Label htmlFor="doctor" className="text-xs font-bold text-slate-500 dark:text-slate-400">ASSIGN DOCTOR <span className="text-rose-500">*</span></Label>
+                                                <Select value={doctor} onValueChange={setDoctor}>
+                                                    <SelectTrigger id="doctor" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                                                        <SelectValue placeholder="Select doctor" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-2xl backdrop-blur-xl">
+                                                        {doctors.map((doc) => (
+                                                            <SelectItem key={doc._id} value={doc.name} className="rounded-xl">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Stethoscope className="w-3.5 h-3.5 text-slate-400" />
+                                                                    <span>{doc.name}</span>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Additional & Upload */}
+                                <div className="group bg-white/50 dark:bg-slate-900/40 p-6 rounded-4xl border border-slate-200/60 dark:border-white/5 hover:border-pink-500/30 transition-all duration-300 shadow-sm hover:shadow-md">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-xl text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform">
+                                            <ImageIcon className="w-4 h-4" />
+                                        </div>
+                                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest">Additional Details</h4>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="space-y-2.5">
+                                            <Label htmlFor="aiFlag" className="text-xs font-bold text-slate-500 dark:text-slate-400">ANALYSIS RESULT</Label>
+                                            <Select value={aiFlag} onValueChange={setAiFlag}>
+                                                <SelectTrigger id="aiFlag" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                                                    <SelectValue placeholder="Select result" />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-2xl backdrop-blur-xl">
+                                                    <SelectItem value="Normal" className="rounded-xl text-emerald-600 font-bold">Normal</SelectItem>
+                                                    <SelectItem value="Abnormal" className="rounded-xl text-rose-600 font-bold">Abnormal</SelectItem>
+                                                    <SelectItem value="Requires Review" className="rounded-xl text-amber-600 font-bold">Requires Review</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2.5">
+                                            <Label htmlFor="imageUpload" className="text-xs font-bold text-slate-500 dark:text-slate-400">UPLOAD STUDY IMAGE (OPTIONAL)</Label>
+                                            <div className="relative group/upload">
+                                                <Input
+                                                    id="imageUpload"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleImageChange}
+                                                    className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 cursor-pointer file:cursor-pointer p-[0.4rem] file:h-full file:border-0 file:bg-pink-100 file:dark:bg-pink-900/30 file:text-pink-700 file:dark:text-pink-300 file:rounded-xl file:px-4 file:mr-3 transition-all"
+                                                />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 group-hover/upload:opacity-100 transition-opacity">
+                                                    <Upload className="w-4 h-4 text-pink-600" />
+                                                </div>
+                                            </div>
+
+                                            <AnimatePresence>
+                                                {thumbnail && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.9 }}
+                                                        className="mt-4 rounded-3xl overflow-hidden border-2 border-dashed border-pink-200 dark:border-pink-900/30 bg-white/50 dark:bg-slate-900/50 flex items-center justify-center p-4 h-48 relative group/preview"
+                                                    >
+                                                        <img src={thumbnail} alt="Preview" className="max-h-full object-contain rounded-xl shadow-lg" />
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="icon"
+                                                            className="absolute top-2 right-2 rounded-full w-8 h-8 opacity-0 group-hover/preview:opacity-100 transition-opacity"
+                                                            onClick={() => {
+                                                                setThumbnail("")
+                                                                setImageFile(null)
+                                                            }}
+                                                        >
+                                                            ×
+                                                        </Button>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        <div className="flex gap-4 justify-end px-8 py-5 bg-white/50 dark:bg-slate-900/60 backdrop-blur-xl border-t border-slate-100 dark:border-white/5 items-center">
+                            <Button
+                                variant="ghost"
+                                onClick={() => setOpen(false)}
+                                className="rounded-2xl h-12 px-6 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                                disabled={loading}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={loading || !patientName || !patientId || !studyType || !bodyPart || !modality || !doctor}
+                                className="rounded-2xl h-12 px-8 font-extrabold bg-linear-to-r from-[#e05d38] to-[#e05d38] hover:from-[#e05d38] hover:to-[#e05d38] text-white shadow-[0_10px_20px_-10px_rgba(147,51,234,0.4)] hover:shadow-[0_15px_30px_-10px_rgba(147,51,234,0.5)] transition-all duration-300 flex items-center gap-2 min-w-[200px]"
+                            >
+                                {loading ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <span>Saving...</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <span>Add Imaging Study</span>
+                                        <ChevronRight className="w-4 h-4" />
+                                    </>
+                                )}
+                            </Button>
                         </div>
                     </div>
-                </div>
-                <div className="flex gap-3 justify-end px-8 pb-8 pt-4 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 rounded-b-3xl">
-                    <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl h-11 px-6 font-bold">
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={loading || !patientName || !patientId || !studyType || !bodyPart || !modality || !doctor}
-                        className="rounded-xl h-11 px-6 font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25"
-                    >
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {loading ? "Adding..." : "Add Imaging Study"}
-                    </Button>
-                </div>
+                )}
             </DialogContent>
         </Dialog>
     )

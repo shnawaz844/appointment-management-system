@@ -2,9 +2,17 @@ import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 import { getAuthSession } from "@/lib/auth"
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const { data, error } = await supabase.from("opd").select("*").order("created_at", { ascending: false })
+        const { searchParams } = new URL(request.url)
+        const dateFilter = searchParams.get("date") // e.g. "26 Mar 2026"
+
+        let query = supabase.from("opd").select("*").order("created_at", { ascending: false })
+        if (dateFilter) {
+            query = query.eq("date", dateFilter)
+        }
+
+        const { data, error } = await query
         if (error) throw error
         return NextResponse.json(data)
     } catch (error) {

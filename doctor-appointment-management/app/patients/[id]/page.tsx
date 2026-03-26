@@ -3,15 +3,19 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { User, Phone, Mail, Calendar, FileText, Download, ExternalLink, ArrowLeft } from "lucide-react"
+import { User, Phone, Mail, Calendar, FileText, Download, ExternalLink, ArrowLeft, Pill, Plus, FileImage, Eye } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { ImagingStudies } from "@/components/imaging-studies"
+import { CreateImagingDialog } from "@/components/create-imaging-dialog"
 import Link from "next/link"
 import { CreateMedicalRecordDialog } from "@/components/create-medical-record-dialog"
 import { CreateAppointmentDialog } from "@/components/create-appointment-dialog"
 import { ViewReportDialog } from "@/components/view-report-dialog"
 import { CreatePrescriptionDialog } from "@/components/create-prescription-dialog"
-import { FileSignature } from "lucide-react"
+import { DeletePrescriptionDialog } from "@/components/delete-prescription-dialog"
+import { ViewMedicalRecordDialog } from "@/components/view-medical-record-dialog"
+import { FileSignature, Trash2 } from "lucide-react"
+import { DeleteReportDialog } from "@/components/delete-report-dialog"
 
 export default async function PatientProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -22,19 +26,22 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
     { data: patientReportsData },
     { data: patientAppointmentsData },
     { data: patientMedicalRecordsData },
-    { data: patientImagingStudiesData }
+    { data: patientImagingStudiesData },
+    { data: patientPrescriptionsData }
   ] = await Promise.all([
     supabase.from("patients").select("*").eq("id", id).single(),
     supabase.from("reports").select("*").eq("patient_id", id),
     supabase.from("appointments").select("*").eq("patient_id", id).order("date", { ascending: false }),
     supabase.from("medicalrecords").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
-    supabase.from("imagingstudies").select("*").eq("patient_id", id).order("created_at", { ascending: false })
+    supabase.from("imagingstudies").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
+    supabase.from("prescriptions").select("*").eq("patient_id", id).order("issued", { ascending: false })
   ])
 
   const patientReports = patientReportsData || []
   const patientAppointments = patientAppointmentsData || []
   const patientMedicalRecords = patientMedicalRecordsData || []
   const patientImagingStudies = patientImagingStudiesData || []
+  const patientPrescriptions = patientPrescriptionsData || []
 
   if (!patient) {
 
@@ -90,19 +97,19 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             </div>
             <div className="flex gap-2">
               <CreateMedicalRecordDialog preselectedPatientId={patient.id}>
-                <Button variant="outline">
+                <Button variant="ghost" className="rounded-full px-6 bg-slate-50 border border-slate-200 hover:bg-slate-100 dark:bg-slate-900 border-none">
                   <FileText className="h-4 w-4 mr-2" />
                   Add Report
                 </Button>
               </CreateMedicalRecordDialog>
               <CreatePrescriptionDialog preselectedPatientId={patient.id}>
-                <Button variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/40">
+                <Button className="rounded-full px-6 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/40 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900 transition-all font-bold">
                   <FileSignature className="h-4 w-4 mr-2" />
                   Create Prescription
                 </Button>
               </CreatePrescriptionDialog>
               <CreateAppointmentDialog preselectedPatientId={patient.id}>
-                <Button>
+                <Button className="rounded-full px-6 bg-[#e05d38] hover:bg-[#c14a27] text-white shadow-lg shadow-[#e05d38]/20 hover:scale-105 transition-all font-bold">
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule Visit
                 </Button>
@@ -117,6 +124,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="visits">Visits & Appointments</TabsTrigger>
             <TabsTrigger value="reports">Medical Reports</TabsTrigger>
+            <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
             <TabsTrigger value="imaging">Imaging</TabsTrigger>
           </TabsList>
 
@@ -198,41 +206,20 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                 </CardContent>
               </Card>
             </div>
-
+            {/* 
             <Card>
               <CardHeader>
-                <CardTitle>Orthopedic Details</CardTitle>
+                <CardTitle>More Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-6 md:grid-cols-2">
-                  {/* <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Side Affected</p>
-                    <p className="text-base font-medium text-foreground">{patient.laterality || "N/A"}</p>
-                  </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Severity</p>
-                    <Badge variant="outline">{patient.severity || "Not specified"}</Badge>
-                  </div> */}
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Date of Injury/Onset</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Date of Consultation</p>
                     <p className="text-base font-medium text-foreground">{patient.injury_date || "N/A"}</p>
                   </div>
-                  {/* <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Surgery Status</p>
-                    <Badge variant={patient.surgeryRequired ? "destructive" : "secondary"}>
-                      {patient.surgeryRequired ? "Surgery Required" : "Conservative Treatment"}
-                    </Badge>
-                  </div> */}
                 </div>
-                {/* <Separator /> */}
-                {/* <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Physical Therapy</p>
-                  <Badge variant={patient.physicalTherapy ? "default" : "secondary"}>
-                    {patient.physicalTherapy ? "Active" : "Not scheduled"}
-                  </Badge>
-                </div> */}
               </CardContent>
-            </Card>
+            </Card> */}
           </TabsContent>
 
           {/* Visits & Appointments Tab */}
@@ -278,9 +265,17 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
           {/* Medical Reports Tab */}
           <TabsContent value="reports" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Medical Reports</CardTitle>
-                <CardDescription>Imaging and diagnostic reports organized by type</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Medical Reports</CardTitle>
+                  <CardDescription>Imaging and diagnostic reports organized by type</CardDescription>
+                </div>
+                <CreateMedicalRecordDialog preselectedPatientId={id}>
+                  <Button className="rounded-full px-8 bg-[#e05d38] hover:bg-[#c04d28] text-white shadow-lg shadow-[#e05d38]/20 hover:scale-105 transition-all font-bold">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Report
+                  </Button>
+                </CreateMedicalRecordDialog>
               </CardHeader>
               <CardContent className="space-y-6">
                 {patientMedicalRecords.length > 0 ? (
@@ -304,8 +299,19 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                             <p className="text-xs text-muted-foreground mt-1 truncate">{record.summary}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           <Badge variant={record.status === "Active" ? "default" : "secondary"}>{record.status}</Badge>
+                          <ViewMedicalRecordDialog record={record}>
+                            <Button variant="ghost" size="sm" className="h-8 rounded-lg hover:bg-primary/10 hover:text-primary font-bold transition-all px-4">
+                              <Eye className="h-4 w-4 mr-2" />
+                              View
+                            </Button>
+                          </ViewMedicalRecordDialog>
+                          <DeleteReportDialog reportId={record.id} reportType={record.record_type}>
+                            <Button variant="ghost" size="sm" className="h-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-all px-3">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </DeleteReportDialog>
                         </div>
                       </div>
                     ))}
@@ -322,7 +328,106 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
 
           {/* Imaging Tab */}
           <TabsContent value="imaging" className="space-y-6">
-            <ImagingStudies studies={patientImagingStudies} />
+            <Card className="rounded-4xl border-none shadow-2xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between px-8 py-6 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                  <CardTitle className="text-xl font-black text-slate-900 dark:text-white">Imaging Studies</CardTitle>
+                  <CardDescription className="text-xs font-medium text-slate-500">X-rays, CT scans, MRI, and ultrasound imaging</CardDescription>
+                </div>
+                <CreateImagingDialog
+                  preselectedPatientId={patient.id}
+                  preselectedPatientName={patient.name}
+                  preselectedDoctor={patient.doctor}
+                >
+                  <Button className="rounded-full px-8 bg-[#e05d38] hover:bg-[#c04d28] text-white shadow-lg shadow-[#e05d38]/20 hover:scale-105 transition-all font-bold">
+                    <FileImage className="h-4 w-4 mr-2" />
+                    New Imaging Study
+                  </Button>
+                </CreateImagingDialog>
+              </CardHeader>
+              <CardContent className="p-8">
+                <ImagingStudies studies={patientImagingStudies} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Prescriptions Tab */}
+          <TabsContent value="prescriptions" className="space-y-6">
+            <Card className="rounded-4xl border-none shadow-2xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between px-8 py-6 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                  <CardTitle className="text-xl font-black text-slate-900 dark:text-white">Prescription History</CardTitle>
+                  <CardDescription className="text-xs font-medium text-slate-500">Patient's medication history and active prescriptions</CardDescription>
+                </div>
+                <CreatePrescriptionDialog preselectedPatientId={patient.id}>
+                  <Button className="rounded-full px-8 bg-[#e05d38] hover:bg-[#c04d28] text-white shadow-lg shadow-[#e05d38]/20 hover:scale-105 transition-all font-bold">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Prescription
+                  </Button>
+                </CreatePrescriptionDialog>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="space-y-4">
+                  {patientPrescriptions.length > 0 ? (
+                    patientPrescriptions.map((rx: any) => (
+                      <div key={rx.id} className="p-5 rounded-2xl border border-border group hover:bg-slate-500/5 transition-all">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="space-y-3 flex-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant={rx.status === "Active" ? "default" : "secondary"} className="rounded-full px-4 h-6 uppercase font-black text-[9px] tracking-widest">
+                                {rx.status}
+                              </Badge>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Issued: {rx.issued}</span>
+                            </div>
+                            <div className="space-y-2">
+                              {rx.medications?.map((m: any, idx: number) => (
+                                <div key={idx} className="flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                    <Pill className="h-4 w-4 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{m.medication}</p>
+                                    <p className="text-[10px] text-slate-500 font-medium">{m.dosage} • {m.quantity} Units</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {rx.instructions && (
+                              <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Instructions</p>
+                                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic">"{rx.instructions}"</p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-2 text-right">
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                              <User className="h-3 w-3" />
+                              <span>Dr. {rx.doctor_name}</span>
+                            </div>
+                            {rx.duration && (
+                              <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                                Duration: {rx.duration}
+                              </div>
+                            )}
+                            <DeletePrescriptionDialog prescriptionId={rx.id} medicationName={rx.medications?.[0]?.medication || "Prescription"}>
+                              <Button variant="ghost" size="sm" className="h-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-all px-3 mt-2">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Delete</span>
+                              </Button>
+                            </DeletePrescriptionDialog>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                      <Pill className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p className="text-sm font-bold opacity-50 uppercase tracking-widest">No prescriptions found</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

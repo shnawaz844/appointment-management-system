@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Trash2 } from "lucide-react"
+import { DeleteImagingDialog } from "./delete-imaging-dialog"
 import Image from "next/image"
 
 interface ImagingStudiesProps {
@@ -29,14 +31,21 @@ export function ImagingStudies({ studies = [] }: ImagingStudiesProps) {
                 </div>
                 <p className="font-medium text-foreground">{study.study_type}</p>
                 <p className="text-sm text-muted-foreground mt-1">{study.date}</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-3 bg-transparent"
-                  onClick={() => setSelectedImage(study)}
-                >
-                  View Image
-                </Button>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 bg-transparent font-bold"
+                    onClick={() => setSelectedImage(study)}
+                  >
+                    View Image
+                  </Button>
+                  <DeleteImagingDialog imagingId={study.id} studyType={study.study_type}>
+                    <Button variant="ghost" size="sm" className="h-9 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-all px-3">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </DeleteImagingDialog>
+                </div>
               </div>
             )) : (
               <div className="col-span-3 text-center py-8 text-muted-foreground">

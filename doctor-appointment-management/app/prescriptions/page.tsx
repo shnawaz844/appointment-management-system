@@ -5,14 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Pill, Package, X, Eye, Loader2, ClipboardList } from "lucide-react"
+import { Pill, Package, X, Eye, Loader2, ClipboardList, Search } from "lucide-react"
 import { CreatePrescriptionDialog } from "@/components/create-prescription-dialog"
+import { Input } from "@/components/ui/input"
 
 interface Prescription {
   _id: string
   id: string
-  patientName: string
-  patientId: string
+  patient_name: string
+  patient_id: string
   medications: {
     medication: string
     dosage: string
@@ -20,8 +21,8 @@ interface Prescription {
   }[]
   issued: string
   status: "Active" | "Filled" | "Expired"
-  doctorName: string
-  doctorId: string
+  doctor_name: string
+  doctor_id: string
   instructions?: string
   duration?: string
 }
@@ -30,9 +31,10 @@ export default function PrescriptionsPage() {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<"all" | "Active" | "Filled">("all")
+  const [searchTerm, setSearchTerm] = useState("")
   const [selectedPatient, setSelectedPatient] = useState<Prescription | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 8
+  const itemsPerPage = 10
 
   const fetchPrescriptions = useCallback(async () => {
     try {
@@ -54,12 +56,16 @@ export default function PrescriptionsPage() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [filterStatus])
+  }, [filterStatus, searchTerm])
 
   const filteredPrescriptions = prescriptions.filter((rx) => {
-    if (filterStatus === "Active") return rx.status === "Active"
-    if (filterStatus === "Filled") return rx.status === "Filled"
-    return true
+    const matchesStatus = filterStatus === "all" || rx.status === filterStatus
+    const matchesSearch =
+      rx.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rx.patient_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rx.id.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return matchesStatus && matchesSearch
   })
 
   const activeCount = prescriptions.filter((r) => r.status === "Active").length
@@ -148,17 +154,28 @@ export default function PrescriptionsPage() {
 
         {/* Prescriptions Table */}
         <div className="glass-premium rounded-3xl p-8 hover:shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-1000">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white">Recent Prescriptions</h3>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Detailed overview of medication issuances</p>
             </div>
-            <CreatePrescriptionDialog onCreated={fetchPrescriptions}>
-              <Button className="rounded-xl px-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:scale-105 transition-transform">
-                <Pill className="h-4 w-4 mr-2" />
-                Create Prescription
-              </Button>
-            </CreatePrescriptionDialog>
+            <div className="flex items-center gap-3">
+              <div className="relative group w-64">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <Input
+                  className="pl-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-blue-500/20"
+                  placeholder="Search name or ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <CreatePrescriptionDialog onCreated={fetchPrescriptions}>
+                <Button className="h-11 rounded-xl px-6 bg-[#e05d38] text-white hover:bg-[#c94f2f] hover:scale-105 transition-transform">
+                  <Pill className="h-4 w-4 mr-2" />
+                  Create Prescription
+                </Button>
+              </CreatePrescriptionDialog>
+            </div>
           </div>
 
           <div>
@@ -178,6 +195,7 @@ export default function PrescriptionsPage() {
                 <Table>
                   <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                     <TableRow className="hover:bg-transparent border-slate-200/50 dark:border-slate-800/50">
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12 w-16">S.No</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Patient Name</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">OPD NO</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Medications</TableHead>
@@ -188,10 +206,13 @@ export default function PrescriptionsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedPrescriptions.map((rx) => (
+                    {paginatedPrescriptions.map((rx, index) => (
                       <TableRow key={rx._id} className="group hover:bg-slate-500/5 transition-colors border-slate-200/50 dark:border-slate-800/50">
-                        <TableCell className="font-bold text-slate-900 dark:text-white py-4">{rx.patientName}</TableCell>
-                        <TableCell className="font-mono text-[11px] text-slate-500 py-4">{rx.patientId}</TableCell>
+                        <TableCell className="font-mono text-[11px] font-bold text-slate-400 py-4">
+                          {((currentPage - 1) * itemsPerPage) + index + 1}
+                        </TableCell>
+                        <TableCell className="font-bold text-slate-900 dark:text-white py-4">{rx.patient_name}</TableCell>
+                        <TableCell className="font-mono text-[11px] text-slate-500 py-4">{rx.patient_id}</TableCell>
                         <TableCell className="py-4">
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -205,7 +226,7 @@ export default function PrescriptionsPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm font-bold text-slate-700 dark:text-slate-300 py-4">{rx.doctorName}</TableCell>
+                        <TableCell className="text-sm font-bold text-slate-700 dark:text-slate-300 py-4">{rx.doctor_name}</TableCell>
                         <TableCell className="text-sm font-medium text-slate-500 py-4">{rx.issued}</TableCell>
                         <TableCell className="py-4">
                           <Badge
@@ -274,7 +295,7 @@ export default function PrescriptionsPage() {
               <div className="space-y-1">
                 <CardTitle className="text-2xl font-black text-slate-900 dark:text-white">Prescription Details</CardTitle>
                 <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                  {selectedPatient.patientName} • {selectedPatient.doctorName.toLowerCase().startsWith('dr') ? selectedPatient.doctorName : `Dr. ${selectedPatient.doctorName}`}
+                  {selectedPatient.patient_name} • {selectedPatient.doctor_name.toLowerCase().startsWith('dr') ? selectedPatient.doctor_name : `Dr. ${selectedPatient.doctor_name}`}
                 </p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setSelectedPatient(null)} className="h-10 w-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -292,7 +313,7 @@ export default function PrescriptionsPage() {
                   </div>
                   <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Patient ID</p>
-                    <p className="text-sm font-black text-slate-900 dark:text-white font-mono">{selectedPatient.patientId}</p>
+                    <p className="text-sm font-black text-slate-900 dark:text-white font-mono">{selectedPatient.patient_id}</p>
                   </div>
                 </div>
 

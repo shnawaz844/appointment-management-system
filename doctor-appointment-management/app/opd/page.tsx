@@ -325,12 +325,12 @@ export default function OPDPage() {
                     className="rounded-2xl gap-3 px-8 h-12 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all font-bold text-base"
                 >
                     {isSaving ? <Activity className="h-5 w-5 animate-spin" /> : <Printer className="h-5 w-5" />}
-                    {isSaving ? "Saving..." : "Print Form"}
+                    {isSaving ? "Saving..." : "Print Form & Save"}
                 </Button>
             </div>
 
             {/* Input Form UI (Visible on screen) */}
-            <div className="bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-4xl p-8 no-print">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-4xl p-8 no-print">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <InputFormGroup label="UHID No." name="uhidNo" value={formData.uhidNo} onChange={handleChange} error={errors.uhidNo} />
                     <InputFormGroup label="Date" name="date" value={formData.date} onChange={handleChange} error={errors.date} />
@@ -354,8 +354,8 @@ export default function OPDPage() {
                                         }}
                                         placeholder="Type or select patient..."
                                         className={cn(
-                                            "w-full bg-white/50 border rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 outline-none transition-all shadow-sm",
-                                            errors.patientName ? "border-red-500 focus:ring-red-500/20" : "border-slate-200 focus:ring-primary/20 focus:border-primary"
+                                            "w-full bg-white/50 dark:bg-slate-900/50 border rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 outline-none transition-all shadow-sm dark:text-foreground",
+                                            errors.patientName ? "border-red-500 focus:ring-red-500/20" : "border-slate-200 dark:border-slate-800 focus:ring-primary/20 focus:border-primary"
                                         )}
                                     />
                                     <ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50 cursor-pointer" onClick={() => setOpenPatient(!openPatient)} />
@@ -424,8 +424,8 @@ export default function OPDPage() {
                                     role="combobox"
                                     aria-expanded={openConsultant}
                                     className={cn(
-                                        "w-full justify-between bg-white/50 border rounded-xl px-4 py-3 h-auto text-sm font-semibold hover:bg-white/80",
-                                        errors.consultant ? "border-red-500" : "border-slate-200"
+                                        "w-full justify-between bg-white/50 dark:bg-slate-900/50 border rounded-xl px-4 py-3 h-auto text-sm font-semibold hover:bg-white/80 dark:hover:bg-slate-800/80",
+                                        errors.consultant ? "border-red-500" : "border-slate-200 dark:border-slate-800"
                                     )}
                                 >
                                     {formData.consultant || "Select consultant..."}
@@ -439,22 +439,30 @@ export default function OPDPage() {
                                     <CommandList>
                                         <CommandEmpty>No consultant found.</CommandEmpty>
                                         <CommandGroup>
-                                            {doctors.map((doctor) => (
-                                                <CommandItem
-                                                    key={doctor.id}
-                                                    value={doctor.name}
-                                                    onSelect={() => handleConsultantSelect(doctor)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    <Check
-                                                        className={cn(
-                                                            "mr-2 h-4 w-4",
-                                                            formData.consultant === doctor.name ? "opacity-100" : "opacity-0"
-                                                        )}
-                                                    />
-                                                    {doctor.name}
-                                                </CommandItem>
-                                            ))}
+                                            {doctors.map((doctor) => {
+                                                const specialty = specialties.find((s: any) => s.id === doctor.specialty_id)
+                                                return (
+                                                    <CommandItem
+                                                        key={doctor.id}
+                                                        value={`${doctor.name} ${specialty?.name ?? ""}`}
+                                                        onSelect={() => handleConsultantSelect(doctor)}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                formData.consultant === doctor.name ? "opacity-100" : "opacity-0"
+                                                            )}
+                                                        />
+                                                        <div className="flex flex-col">
+                                                            <span>{doctor.name}</span>
+                                                            {specialty?.name && (
+                                                                <span className="text-[10px] text-muted-foreground">{specialty.name}</span>
+                                                            )}
+                                                        </div>
+                                                    </CommandItem>
+                                                )
+                                            })}
                                         </CommandGroup>
                                     </CommandList>
                                 </Command>
@@ -604,7 +612,7 @@ function InputFormGroup({
 }) {
     return (
         <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 ml-1">{label}</label>
+            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">{label}</label>
             <input
                 type="text"
                 name={name}
@@ -612,8 +620,8 @@ function InputFormGroup({
                 value={value}
                 onChange={onChange}
                 className={cn(
-                    "w-full bg-white/50 border rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 outline-none transition-all shadow-sm",
-                    error ? "border-red-500 focus:ring-red-500/20" : "border-slate-200 focus:ring-primary/20 focus:border-primary"
+                    "w-full bg-white/50 dark:bg-slate-900/50 border rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 outline-none transition-all shadow-sm dark:text-foreground",
+                    error ? "border-red-500 focus:ring-red-500/20" : "border-slate-200 dark:border-slate-800 focus:ring-primary/20 focus:border-primary"
                 )}
             />
             {error && <p className="text-[10px] font-bold text-red-500 ml-1 mt-1 uppercase tracking-wider">{error}</p>}

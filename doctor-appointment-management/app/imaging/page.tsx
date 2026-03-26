@@ -12,17 +12,16 @@ import { FileImage, AlertCircle, CheckCircle2, Eye, Download, Maximize2, FileTex
 import { CreateImagingDialog } from "@/components/create-imaging-dialog"
 
 interface ImagingStudy {
-  _id: string
   id: string
-  patientId: string
-  patientName: string
-  studyType: string
-  bodyPart: string
+  patient_id: string
+  patient_name: string
+  study_type: string
+  body_part: string
   modality: "X-Ray" | "CT" | "MRI" | "Ultrasound"
   date: string
   month: string
   year: string
-  aiFlag?: "Normal" | "Abnormal" | "Requires Review"
+  ai_flag?: "Normal" | "Abnormal" | "Requires Review"
   thumbnail: string
   doctor: string
 }
@@ -62,12 +61,12 @@ export default function ImagingPage() {
   }, [modalityFilter, bodyPartFilter, yearFilter])
 
   // Derive unique body parts and years from fetched data
-  const uniqueBodyParts = Array.from(new Set(studies.map((s) => s.bodyPart))).sort()
+  const uniqueBodyParts = Array.from(new Set(studies.map((s) => s.body_part))).sort()
   const uniqueYears = Array.from(new Set(studies.map((s) => s.year))).sort((a, b) => Number(b) - Number(a))
 
   const filteredStudies = studies.filter((study) => {
     const matchesModality = modalityFilter === "all" || study.modality === modalityFilter
-    const matchesBodyPart = bodyPartFilter === "all" || study.bodyPart === bodyPartFilter
+    const matchesBodyPart = bodyPartFilter === "all" || study.body_part === bodyPartFilter
     const matchesYear = yearFilter === "all" || study.year === yearFilter
     return matchesModality && matchesBodyPart && matchesYear
   })
@@ -182,14 +181,14 @@ export default function ImagingPage() {
         ) : filteredStudies.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {paginatedStudies.map((study) => (
-              <Card key={study._id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <Card key={study.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div
                   className="relative aspect-square bg-muted group cursor-pointer"
                   onClick={() => openImageView(study)}
                 >
                   <img
                     src={study.thumbnail || "/placeholder.svg"}
-                    alt={study.studyType}
+                    alt={study.study_type}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -198,24 +197,24 @@ export default function ImagingPage() {
                       View Full Size
                     </Button>
                   </div>
-                  {study.aiFlag && (
+                  {study.ai_flag && (
                     <Badge
                       variant="outline"
-                      className={`absolute top-3 right-3 ${getAiFlagColor(study.aiFlag)} flex items-center gap-1`}
+                      className={`absolute top-3 right-3 ${getAiFlagColor(study.ai_flag)} flex items-center gap-1`}
                     >
-                      {getAiFlagIcon(study.aiFlag)}
-                      {study.aiFlag}
+                      {getAiFlagIcon(study.ai_flag)}
+                      {study.ai_flag}
                     </Badge>
                   )}
                 </div>
 
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-foreground mb-1">{study.studyType}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">{study.patientName}</p>
+                  <h3 className="font-semibold text-foreground mb-1">{study.study_type}</h3>
+                  <p className="text-sm text-muted-foreground mb-3">{study.patient_name}</p>
 
                   <div className="flex flex-wrap gap-2 mb-3">
                     <Badge variant="outline">{study.modality}</Badge>
-                    <Badge variant="outline">{study.bodyPart}</Badge>
+                    <Badge variant="outline">{study.body_part}</Badge>
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
@@ -287,15 +286,15 @@ export default function ImagingPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedImage?.studyType}</DialogTitle>
+            <DialogTitle>{selectedImage?.study_type}</DialogTitle>
           </DialogHeader>
           {selectedImage && (
             <div className="space-y-4">
               {!showReport ? (
-                <div className="relative aspect-[16/10] bg-muted rounded-lg overflow-hidden">
+                <div className="relative aspect-16/10 bg-muted rounded-lg overflow-hidden">
                   <img
                     src={selectedImage.thumbnail || "/placeholder.svg"}
-                    alt={selectedImage.studyType}
+                    alt={selectedImage.study_type}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -306,7 +305,7 @@ export default function ImagingPage() {
                     <div>
                       <p className="font-medium text-muted-foreground">Clinical History:</p>
                       <p className="text-foreground mt-1">
-                        Patient presents with chronic pain in the {selectedImage.bodyPart.toLowerCase()} region.
+                        Patient presents with chronic pain in the {selectedImage.body_part.toLowerCase()} region.
                         Previous conservative treatment with limited improvement.
                       </p>
                     </div>
@@ -314,7 +313,7 @@ export default function ImagingPage() {
                     <div>
                       <p className="font-medium text-muted-foreground">Technique:</p>
                       <p className="text-foreground mt-1">
-                        {selectedImage.modality} imaging of the {selectedImage.bodyPart.toLowerCase()} was performed
+                        {selectedImage.modality} imaging of the {selectedImage.body_part.toLowerCase()} was performed
                         using standard protocols.
                       </p>
                     </div>
@@ -322,20 +321,20 @@ export default function ImagingPage() {
                     <div>
                       <p className="font-medium text-muted-foreground">Findings:</p>
                       <p className="text-foreground mt-1">
-                        {selectedImage.aiFlag === "Abnormal"
-                          ? `Abnormal findings consistent with degenerative changes. Moderate to severe structural abnormalities noted in the ${selectedImage.bodyPart.toLowerCase()}.`
-                          : selectedImage.aiFlag === "Requires Review"
+                        {selectedImage.ai_flag === "Abnormal"
+                          ? `Abnormal findings consistent with degenerative changes. Moderate to severe structural abnormalities noted in the ${selectedImage.body_part.toLowerCase()}.`
+                          : selectedImage.ai_flag === "Requires Review"
                             ? `Equivocal findings requiring clinical correlation. Further evaluation recommended.`
-                            : `No acute abnormalities detected. Normal anatomical structures visualized in the ${selectedImage.bodyPart.toLowerCase()}.`}
+                            : `No acute abnormalities detected. Normal anatomical structures visualized in the ${selectedImage.body_part.toLowerCase()}.`}
                       </p>
                     </div>
                     <Separator />
                     <div>
                       <p className="font-medium text-muted-foreground">Impression:</p>
                       <p className="text-foreground mt-1">
-                        {selectedImage.aiFlag === "Abnormal"
+                        {selectedImage.ai_flag === "Abnormal"
                           ? "Significant pathology identified. Recommend orthopedic consultation for treatment planning."
-                          : selectedImage.aiFlag === "Requires Review"
+                          : selectedImage.ai_flag === "Requires Review"
                             ? "Clinical correlation recommended. Follow-up imaging may be warranted."
                             : "Normal study. No acute findings requiring immediate intervention."}
                       </p>
@@ -347,7 +346,7 @@ export default function ImagingPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Patient</p>
-                  <p className="text-base font-semibold text-foreground">{selectedImage.patientName}</p>
+                  <p className="text-base font-semibold text-foreground">{selectedImage.patient_name}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Study ID</p>
@@ -359,7 +358,7 @@ export default function ImagingPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Body Part</p>
-                  <Badge variant="outline">{selectedImage.bodyPart}</Badge>
+                  <Badge variant="outline">{selectedImage.body_part}</Badge>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Date</p>
@@ -369,15 +368,15 @@ export default function ImagingPage() {
                   <p className="text-sm font-medium text-muted-foreground mb-1">Doctor Assigned</p>
                   <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">Dr. {selectedImage.doctor}</p>
                 </div>
-                {selectedImage.aiFlag && (
+                {selectedImage.ai_flag && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground mb-1">AI Analysis</p>
                     <Badge
                       variant="outline"
-                      className={`${getAiFlagColor(selectedImage.aiFlag)} flex items-center gap-1 w-fit`}
+                      className={`${getAiFlagColor(selectedImage.ai_flag)} flex items-center gap-1 w-fit`}
                     >
-                      {getAiFlagIcon(selectedImage.aiFlag)}
-                      {selectedImage.aiFlag}
+                      {getAiFlagIcon(selectedImage.ai_flag)}
+                      {selectedImage.ai_flag}
                     </Badge>
                   </div>
                 )}
