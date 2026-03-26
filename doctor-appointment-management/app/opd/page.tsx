@@ -339,7 +339,7 @@ export default function OPDPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     {/* Dynamic Patient Name Selection */}
                     <div className="space-y-2 relative">
-                        <label className="text-sm font-bold text-slate-700 ml-1">Patient's Name</label>
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Patient's Name</label>
                         <Popover open={openPatient} onOpenChange={setOpenPatient}>
                             <PopoverTrigger asChild>
                                 <div className="relative">
@@ -362,8 +362,7 @@ export default function OPDPage() {
                                 </div>
                             </PopoverTrigger>
                             {errors.patientName && <p className="text-[10px] font-bold text-red-500 ml-1 mt-1 uppercase tracking-wider">{errors.patientName}</p>}
-                            <PopoverContent
-                                className="w-[300px] p-0 shadow-2xl rounded-xl border-slate-100"
+                            <PopoverContent className="w-[300px] p-0 shadow-2xl rounded-xl border-slate-100 dark:border-slate-800"
                                 align="start"
                                 onOpenAutoFocus={(e) => e.preventDefault()}
                                 onCloseAutoFocus={(e) => e.preventDefault()}
@@ -416,7 +415,7 @@ export default function OPDPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     {/* Dynamic Consultant Selection */}
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-1">Consultant</label>
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Consultant</label>
                         <Popover open={openConsultant} onOpenChange={setOpenConsultant}>
                             <PopoverTrigger asChild>
                                 <Button
@@ -433,7 +432,7 @@ export default function OPDPage() {
                                 </Button>
                             </PopoverTrigger>
                             {errors.consultant && <p className="text-[10px] font-bold text-red-500 ml-1 mt-1 uppercase tracking-wider">{errors.consultant}</p>}
-                            <PopoverContent className="w-[300px] p-0 shadow-2xl rounded-xl border-slate-100">
+                            <PopoverContent className="w-[300px] p-0 shadow-2xl rounded-xl border-slate-100 dark:border-slate-800">
                                 <Command>
                                     <CommandInput placeholder="Search consultant..." />
                                     <CommandList>

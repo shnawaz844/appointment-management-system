@@ -236,16 +236,27 @@ export function AppSidebar() {
                     isActive={isActive}
                     tooltip={item.title}
                     className={cn(
-                      "flex items-center gap-3 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200",
-                      state === "collapsed" ? "justify-center px-0" : "px-3",
+                      "flex items-center gap-3 rounded-xl py-2.5 text-sm font-semibold transition-all duration-300 group",
+                      state === "collapsed" ? "justify-center px-0 w-10 h-10 mx-auto" : "px-3",
                       isActive
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                        ? "bg-primary/10 text-primary border border-primary/20 shadow-sm shadow-primary/5 scale-[1.02]"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground hover:translate-x-0.5",
                     )}
                   >
-                    <Link href={item.href}>
-                      <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-primary/70")} />
-                      <span>{item.title}</span>
+                    <Link href={item.href} className="flex items-center w-full gap-3">
+                      <Icon className={cn(
+                        "transition-all duration-300",
+                        state === "collapsed" ? "h-5 w-5" : "h-4.5 w-4.5",
+                        isActive ? "text-primary scale-110" : "text-primary/60 group-hover:text-primary"
+                      )} />
+                      {state === "expanded" && (
+                        <span className={cn(
+                          "transition-colors duration-300",
+                          isActive ? "text-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                        )}>
+                          {item.title}
+                        </span>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
