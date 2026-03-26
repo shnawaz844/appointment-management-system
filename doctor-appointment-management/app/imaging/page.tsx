@@ -107,23 +107,24 @@ export default function ImagingPage() {
 
   return (
     <main className="flex-1">
-      <div className="container py-8 px-8">
-        <div className="flex items-start justify-between mb-6">
+      <div className="container mx-auto py-6 md:py-8 px-4 md:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
           <PageHeader title="Documents & Imaging" description="Browse and manage orthopedic imaging studies" />
           <CreateImagingDialog onCreated={fetchStudies}>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Imaging Study
             </Button>
           </CreateImagingDialog>
         </div>
 
+
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
               <Select value={modalityFilter} onValueChange={setModalityFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Modality" />
                 </SelectTrigger>
                 <SelectContent>
@@ -136,7 +137,7 @@ export default function ImagingPage() {
               </Select>
 
               <Select value={bodyPartFilter} onValueChange={setBodyPartFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Body Part" />
                 </SelectTrigger>
                 <SelectContent>
@@ -150,7 +151,7 @@ export default function ImagingPage() {
               </Select>
 
               <Select value={yearFilter} onValueChange={setYearFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent>
@@ -163,6 +164,7 @@ export default function ImagingPage() {
                 </SelectContent>
               </Select>
             </div>
+
 
             <div className="mt-4 text-sm text-muted-foreground">
               {loading
@@ -251,10 +253,11 @@ export default function ImagingPage() {
         )}
 
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between mt-8 glass-premium p-4 rounded-2xl">
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-8 glass-premium p-4 rounded-2xl gap-4">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, filteredStudies.length)}</span> of <span className="font-bold">{filteredStudies.length}</span> studies
             </p>
+
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"

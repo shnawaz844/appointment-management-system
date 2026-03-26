@@ -73,8 +73,8 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
   )
 
   return (
-    <main className="flex-1">
-      <div className="container py-8 px-8">
+    <main className="flex-1 min-h-screen overflow-x-hidden overflow-y-auto">
+      <div className="container mx-auto py-6 md:py-8 px-4 md:px-8">
         {/* Back button */}
         <Link href="/patients">
           <Button variant="ghost" className="mb-6">
@@ -85,19 +85,19 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
 
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">{patient.name}</h1>
+              <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{patient.name}</h1>
               <div className="flex items-center gap-3 mt-2">
-                <Badge variant="outline" className="font-mono">
+                <Badge variant="outline" className="font-mono border-slate-200 dark:border-slate-800">
                   {patient.id}
                 </Badge>
-                <Badge>{patient.diagnosis}</Badge>
+                <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border-none">{patient.diagnosis}</Badge>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <CreateMedicalRecordDialog preselectedPatientId={patient.id}>
-                <Button variant="ghost" className="rounded-full px-6 bg-slate-50 border border-slate-200 hover:bg-slate-100 dark:bg-slate-900 border-none">
+                <Button variant="ghost" className="rounded-full px-6 bg-slate-50 border border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-800 transition-all">
                   <FileText className="h-4 w-4 mr-2" />
                   Add Report
                 </Button>
@@ -109,7 +109,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                 </Button>
               </CreatePrescriptionDialog>
               <CreateAppointmentDialog preselectedPatientId={patient.id}>
-                <Button className="rounded-full px-6 bg-[#e05d38] hover:bg-[#c14a27] text-white shadow-lg shadow-[#e05d38]/20 hover:scale-105 transition-all font-bold">
+                <Button className="flex-1 sm:flex-none rounded-full px-6 bg-[#e05d38] hover:bg-[#c14a27] text-white shadow-lg shadow-[#e05d38]/20 hover:scale-105 transition-all font-bold">
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule Visit
                 </Button>
@@ -118,27 +118,30 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
           </div>
         </div>
 
+
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="mb-8">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="visits">Visits & Appointments</TabsTrigger>
-            <TabsTrigger value="reports">Medical Reports</TabsTrigger>
-            <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
-            <TabsTrigger value="imaging">Imaging</TabsTrigger>
+          <TabsList className="mb-8 flex-wrap h-auto gap-1 bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl">
+            <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">Overview</TabsTrigger>
+            <TabsTrigger value="visits" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">Visits & Appointments</TabsTrigger>
+            <TabsTrigger value="reports" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">Medical Reports</TabsTrigger>
+            <TabsTrigger value="prescriptions" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">Prescriptions</TabsTrigger>
+            <TabsTrigger value="imaging" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">Imaging</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               {/* Demographics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Demographics</CardTitle>
+              <Card className="rounded-3xl border-none shadow-xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl transition-all">
+                <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+                  <CardTitle className="text-xl font-black text-slate-900 dark:text-white">Demographics</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex items-start gap-4">
+                    <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                      <User className="h-5 w-5 text-blue-600" />
+                    </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Name</p>
                       <p className="text-base font-medium text-foreground">{patient.name}</p>
@@ -176,9 +179,9 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
               </Card>
 
               {/* Medical Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Medical Information</CardTitle>
+              <Card className="rounded-3xl border-none shadow-xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl transition-all">
+                <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+                  <CardTitle className="text-xl font-black text-slate-900 dark:text-white">Medical Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -224,37 +227,39 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
 
           {/* Visits & Appointments Tab */}
           <TabsContent value="visits" className="space-y-6">
-            <Card>
+            <Card className="rounded-3xl border-none shadow-xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle>Visit History</CardTitle>
-                <CardDescription>Past appointments and consultations</CardDescription>
+                <CardTitle className="text-xl font-black text-slate-900 dark:text-white">Visit History</CardTitle>
+                <CardDescription className="text-sm font-medium text-slate-500">Past appointments and consultations</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {patientAppointments.length > 0 ? (
                     patientAppointments.map((apt: any) => (
-                      <div key={apt.id} className="flex items-start gap-4 p-4 rounded-lg border border-border group hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Calendar className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium text-foreground">{apt.type} - {apt.specialty}</p>
-                            <Badge variant="outline">{apt.status}</Badge>
+                      <div key={apt.id} className="flex flex-col gap-2 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 group hover:bg-white dark:hover:bg-slate-900 transition-all">
+                        <div className="flex items-start gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <Calendar className="h-5 w-5 text-primary" />
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">{apt.date} at {apt.time} with {apt.doctor}</p>
-                          {apt.notes && (
-                            <p className="text-sm text-muted-foreground mt-2">
-                              {apt.notes}
-                            </p>
-                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="font-bold text-slate-900 dark:text-white truncate">{apt.type} - {apt.specialty}</p>
+                              <Badge variant="outline" className="h-5 text-[9px] font-black uppercase tracking-widest">{apt.status}</Badge>
+                            </div>
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">{apt.date} at {apt.time} • {apt.doctor}</p>
+                          </div>
                         </div>
+                        {apt.notes && (
+                          <div className="mt-2 pl-14">
+                            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium italic">"{apt.notes}"</p>
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>No visits or appointments found</p>
+                    <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                      <Calendar className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p className="text-sm font-bold opacity-50 uppercase tracking-widest">No visits or appointments found</p>
                     </div>
                   )}
                 </div>
@@ -264,72 +269,76 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
 
           {/* Medical Reports Tab */}
           <TabsContent value="reports" className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="rounded-3xl border-none shadow-xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6 mb-6">
                 <div>
-                  <CardTitle>Medical Reports</CardTitle>
-                  <CardDescription>Imaging and diagnostic reports organized by type</CardDescription>
+                  <CardTitle className="text-xl font-black text-slate-900 dark:text-white">Medical Reports</CardTitle>
+                  <CardDescription className="text-sm font-medium text-slate-500">Imaging and diagnostic reports organized by type</CardDescription>
                 </div>
                 <CreateMedicalRecordDialog preselectedPatientId={id}>
-                  <Button className="rounded-full px-8 bg-[#e05d38] hover:bg-[#c04d28] text-white shadow-lg shadow-[#e05d38]/20 hover:scale-105 transition-all font-bold">
+                  <Button className="w-full sm:w-auto rounded-full px-8 bg-[#e05d38] hover:bg-[#c04d28] text-white shadow-lg shadow-[#e05d38]/20 hover:scale-105 transition-all font-bold">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Report
                   </Button>
                 </CreateMedicalRecordDialog>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 px-4 md:px-8">
                 {patientMedicalRecords.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {patientMedicalRecords.map((record: any) => (
                       <div
                         key={record.id}
-                        className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 transition-all gap-4"
                       >
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="h-16 w-16 rounded bg-muted flex items-center justify-center shrink-0">
-                            <FileText className="h-8 w-8 text-primary" />
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="h-14 w-14 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                            <FileText className="h-7 w-7 text-blue-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground">{record.record_type}</p>
-                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">{record.record_type}</p>
+                            <div className="flex items-center gap-2 mt-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                               <span>{record.date}</span>
-                              <span>•</span>
+                              <span className="w-1 h-1 rounded-full bg-slate-300" />
                               <span>Dr. {record.doctor}</span>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1 truncate">{record.summary}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-1 italic">"{record.summary}"</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Badge variant={record.status === "Active" ? "default" : "secondary"}>{record.status}</Badge>
-                          <ViewMedicalRecordDialog record={record}>
-                            <Button variant="ghost" size="sm" className="h-8 rounded-lg hover:bg-primary/10 hover:text-primary font-bold transition-all px-4">
-                              <Eye className="h-4 w-4 mr-2" />
-                              View
-                            </Button>
-                          </ViewMedicalRecordDialog>
-                          <DeleteReportDialog reportId={record.id} reportType={record.record_type}>
-                            <Button variant="ghost" size="sm" className="h-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-all px-3">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </DeleteReportDialog>
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                          <Badge variant={record.status === "Active" ? "default" : "secondary"} className="h-6 rounded-full px-3 text-[9px] font-black tracking-widest uppercase">
+                            {record.status}
+                          </Badge>
+                          <div className="flex items-center gap-1">
+                            <ViewMedicalRecordDialog record={record}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 transition-all">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </ViewMedicalRecordDialog>
+                            <DeleteReportDialog reportId={record.id} reportType={record.record_type}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-all">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </DeleteReportDialog>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No medical records found for this patient</p>
+                  <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm font-bold opacity-50 uppercase tracking-widest">No medical records found</p>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
+
           {/* Imaging Tab */}
           <TabsContent value="imaging" className="space-y-6">
-            <Card className="rounded-4xl border-none shadow-2xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between px-8 py-6 border-b border-slate-100 dark:border-slate-800">
+            <Card className="rounded-3xl border-none shadow-xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl overflow-hidden">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-8 py-6 border-b border-slate-100 dark:border-slate-800">
                 <div>
                   <CardTitle className="text-xl font-black text-slate-900 dark:text-white">Imaging Studies</CardTitle>
                   <CardDescription className="text-xs font-medium text-slate-500">X-rays, CT scans, MRI, and ultrasound imaging</CardDescription>
@@ -366,11 +375,11 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                   </Button>
                 </CreatePrescriptionDialog>
               </CardHeader>
-              <CardContent className="p-8">
+              <CardContent className="p-4 md:p-8">
                 <div className="space-y-4">
                   {patientPrescriptions.length > 0 ? (
                     patientPrescriptions.map((rx: any) => (
-                      <div key={rx.id} className="p-5 rounded-2xl border border-border group hover:bg-slate-500/5 transition-all">
+                      <div key={rx.id} className="p-5 rounded-2xl border border-slate-100 dark:border-slate-800 group hover:bg-white dark:hover:bg-slate-900 transition-all shadow-sm">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div className="space-y-3 flex-1">
                             <div className="flex items-center gap-2">

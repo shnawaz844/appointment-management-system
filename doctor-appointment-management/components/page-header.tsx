@@ -72,17 +72,18 @@ export function PageHeader({ title, description, showSearch = false }: PageHeade
   }
 
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between gap-4">
+    <div className="mb-6 md:mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative">
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-1.5 flex items-center gap-3">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-1 md:mb-1.5 flex items-center gap-3">
             {title}
             <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse hidden sm:inline-block" />
           </h1>
-          {description && <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{description}</p>}
+          {description && <p className="text-xs md:text-sm font-medium text-slate-500 dark:text-slate-400">{description}</p>}
         </div>
         {showSearch && (
-          <div className="relative w-full max-w-md group/search">
+          <div className="relative w-full sm:max-w-md group/search">
+
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within/search:text-blue-500 transition-colors duration-300 z-10" />
             <Input
               type="search"

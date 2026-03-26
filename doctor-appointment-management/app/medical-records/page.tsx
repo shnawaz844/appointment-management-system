@@ -106,7 +106,7 @@ export default function MedicalRecordsPage() {
   }
 
   return (
-    <main className="relative flex-1 min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-blue-900/20">
+    <main className="relative flex-1 min-h-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-blue-900/20">
       {/* Decorative Background Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="blob top-[-10%] left-[-10%]" />
@@ -114,11 +114,11 @@ export default function MedicalRecordsPage() {
         <div className="blob blob-3" />
       </div>
 
-      <div className="container relative py-10 px-8">
+      <div className="container mx-auto relative py-6 md:py-10 px-4 md:px-8">
         <PageHeader title="Medical Records" description="Access and manage patient medical records" showSearch />
 
         {/* Records Stats */}
-        <div className="grid gap-8 md:grid-cols-3 mb-10">
+        <div className="grid gap-4 md:gap-8 grid-cols-1 md:grid-cols-3 mb-8 md:mb-10">
           <Card className="group relative overflow-hidden border-none bg-blue-500/10 dark:bg-blue-600/20 backdrop-blur-xl border-t border-l border-white/40 dark:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500">
             <div className="absolute inset-0 bg-linear-to-br from-blue-500/20 via-blue-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
@@ -213,19 +213,20 @@ export default function MedicalRecordsPage() {
         </div>
 
         {/* Medical Records Table */}
-        <div className="glass-premium rounded-3xl p-8 hover:shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-1000">
-          <div className="flex flex-row items-center justify-between mb-8">
+        <div className="glass-premium rounded-3xl p-4 md:p-8 hover:shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-1000">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
             <div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white">Recent Medical Records</h3>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Chronological overview of patient documentation</p>
             </div>
             <CreateMedicalRecordDialog onCreated={fetchRecords}>
-              <Button className="h-11 rounded-xl px-6 bg-[#e05d38] text-white hover:bg-[#c94f2f] hover:scale-105 transition-transform">
+              <Button className="w-full sm:w-auto h-11 rounded-xl px-6 bg-[#e05d38] text-white hover:bg-[#c94f2f] hover:scale-105 transition-transform">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Record
               </Button>
             </CreateMedicalRecordDialog>
           </div>
+
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
@@ -241,7 +242,7 @@ export default function MedicalRecordsPage() {
               <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">Create the first medical record to start managing patient data.</p>
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white/30 dark:bg-slate-950/30">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto bg-white/30 dark:bg-slate-950/30">
               <Table>
                 <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                   <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800">
@@ -301,10 +302,11 @@ export default function MedicalRecordsPage() {
             </div>
           )}
           {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, filteredRecords.length)}</span> of <span className="font-bold">{filteredRecords.length}</span> records
               </p>
+
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"

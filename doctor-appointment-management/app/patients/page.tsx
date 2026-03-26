@@ -97,19 +97,20 @@ export default function PatientsPage() {
 
   return (
     <main className="flex-1">
-      <div className="container py-8 px-8">
-        <div className="flex items-center justify-between mb-8">
+      <div className="container mx-auto py-6 md:py-8 px-4 md:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Patients</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Patients</h1>
             <p className="mt-1 text-sm text-muted-foreground">Manage and view patient records</p>
           </div>
           <AddPatientDialog onSuccess={fetchData}>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Patient
             </Button>
           </AddPatientDialog>
         </div>
+
 
         <Card>
           <CardHeader>
@@ -171,7 +172,7 @@ export default function PatientsPage() {
                 </div>
 
                 {/* Table */}
-                <div className="rounded-lg border border-border">
+                <div className="rounded-lg border border-border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>

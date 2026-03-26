@@ -75,7 +75,7 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <main className="relative flex-1 min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-blue-900/20">
+    <main className="relative flex-1 min-h-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-blue-900/20">
       {/* Decorative Background Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="blob top-[-10%] left-[-10%]" />
@@ -83,11 +83,11 @@ export default function DashboardPage() {
         <div className="blob blob-3" />
       </div>
 
-      <div className="container relative py-10 px-8">
+      <div className="container mx-auto relative py-6 md:py-10 px-4 md:px-8">
         <PageHeader title="Dashboard" description="Overview of your healthcare system" showSearch />
 
         {/* Metric Cards */}
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-10">
+        <div className="grid gap-4 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mb-8 md:mb-10">
           <Card
             className="group relative overflow-hidden border-none bg-blue-500/10 dark:bg-blue-600/20 backdrop-blur-xl border-t border-l border-white/40 dark:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 cursor-pointer"
             onClick={() => router.push("/patients")}
@@ -277,7 +277,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Patients */}
-        <div className="glass-premium rounded-3xl p-8 hover:shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-300">
+        <div className="glass-premium rounded-3xl p-4 md:p-8 hover:shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-300 overflow-x-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white">Recent Patients</h3>

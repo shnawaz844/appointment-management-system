@@ -83,7 +83,7 @@ export default function DoctorsPage() {
 
     return (
         <main className="flex-1">
-            <div className="container py-8 px-8">
+            <div className="container mx-auto py-6 md:py-8 px-4 md:px-8">
                 <PageHeader title="Doctors" description="Manage medical staff" />
 
                 <div className="grid gap-6 md:grid-cols-2">
@@ -119,7 +119,8 @@ export default function DoctorsPage() {
                                         ))}
                                     </datalist>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                                     <div className="space-y-2">
                                         <Label htmlFor="phone">Phone</Label>
                                         <Input

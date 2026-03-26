@@ -55,7 +55,7 @@ export default function SpecialtiesPage() {
 
     return (
         <main className="flex-1">
-            <div className="container py-8 px-8">
+            <div className="container mx-auto py-6 md:py-8 px-4 md:px-8">
                 <PageHeader title="Specialties" description="Manage medical specialties" />
 
                 <div className="grid gap-6 md:grid-cols-2">

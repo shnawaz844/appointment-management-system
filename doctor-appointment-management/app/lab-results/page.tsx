@@ -73,7 +73,7 @@ export default function LabResultsPage() {
   const paginatedResults = filteredResults.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   return (
-    <main className="relative flex-1 min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-blue-900/20">
+    <main className="relative flex-1 min-h-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-blue-900/20">
       {/* Decorative Background Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="blob top-[-10%] left-[-10%]" />
@@ -81,14 +81,14 @@ export default function LabResultsPage() {
         <div className="blob blob-3" />
       </div>
 
-      <div className="container relative py-10 px-8">
+      <div className="container mx-auto relative py-6 md:py-10 px-4 md:px-8">
         <div className="mb-10">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Lab Results</h1>
           <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">View and manage patient laboratory test results</p>
         </div>
 
         {/* Lab Stats */}
-        <div className="grid gap-8 md:grid-cols-3 mb-10">
+        <div className="grid gap-4 md:gap-8 grid-cols-1 md:grid-cols-3 mb-8 md:mb-10">
           <Card
             className={`group relative overflow-hidden border-none backdrop-blur-xl border-t border-l border-white/40 dark:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 cursor-pointer ${filterStatus === "all" ? "bg-blue-500/20 dark:bg-blue-600/30 shadow-lg shadow-blue-500/10" : "bg-blue-500/10 dark:bg-blue-600/20"
               }`}
@@ -154,18 +154,19 @@ export default function LabResultsPage() {
 
         {/* Lab Results Table */}
         <div className="glass-premium rounded-3xl p-8 hover:shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-1000">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
             <div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white">Recent Lab Results</h3>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Detailed overview of diagnostic metrics</p>
             </div>
             <CreateLabResultDialog onCreated={fetchLabResults}>
-              <Button className="rounded-xl px-6 bg-[#e05d38] text-white hover:bg-[#c94f2f] hover:scale-105 transition-transform">
+              <Button className="w-full sm:w-auto rounded-xl px-6 bg-[#e05d38] text-white hover:bg-[#c94f2f] hover:scale-105 transition-transform">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Lab Result
               </Button>
             </CreateLabResultDialog>
           </div>
+
 
           <div>
             {loading ? (
@@ -180,7 +181,7 @@ export default function LabResultsPage() {
                 <p className="text-sm font-medium text-slate-500">Create the first lab result to get started.</p>
               </div>
             ) : (
-              <div className="rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden bg-white/30 dark:bg-slate-950/30">
+              <div className="rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-x-auto bg-white/30 dark:bg-slate-950/30">
                 <Table>
                   <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                     <TableRow className="hover:bg-transparent border-slate-200/50 dark:border-slate-800/50">

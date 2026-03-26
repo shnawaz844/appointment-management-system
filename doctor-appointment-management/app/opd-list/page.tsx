@@ -141,7 +141,7 @@ export default function OPDListPage() {
 
   return (
     <main className="flex-1">
-      <div className="container py-8 px-8">
+      <div className="container mx-auto py-6 md:py-8 px-4 md:px-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">OPD List</h1>
@@ -150,7 +150,7 @@ export default function OPDListPage() {
         </div>
 
         {/* Tab Buttons */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-wrap items-center gap-2 md:gap-4 mb-6">
           <Button
             variant={activeTab === "today" ? "default" : "outline"}
             onClick={() => {
@@ -159,7 +159,7 @@ export default function OPDListPage() {
               setFilterYear("all")
             }}
             className={cn(
-              "rounded-2xl px-6 font-bold transition-all",
+              "flex-1 sm:flex-none rounded-2xl px-6 font-bold transition-all text-xs sm:text-sm h-10 sm:h-11",
               activeTab === "today" ? "shadow-lg shadow-emerald-500/20" : "bg-white/50 dark:bg-slate-900/50"
             )}
           >
@@ -169,7 +169,7 @@ export default function OPDListPage() {
             variant={activeTab === "all" ? "default" : "outline"}
             onClick={() => setActiveTab("all")}
             className={cn(
-              "rounded-2xl px-6 font-bold transition-all",
+              "flex-1 sm:flex-none rounded-2xl px-6 font-bold transition-all text-xs sm:text-sm h-10 sm:h-11",
               activeTab === "all" ? "shadow-lg shadow-blue-500/20" : "bg-white/50 dark:bg-slate-900/50"
             )}
           >
@@ -180,84 +180,86 @@ export default function OPDListPage() {
         <Card>
           <CardHeader>
             <CardTitle>OPD Records</CardTitle>
-            <div className="flex flex-col gap-3 mt-4 md:flex-row md:items-center md:flex-wrap">
+            <div className="flex flex-col gap-3 mt-4 lg:flex-row lg:items-center">
               {/* Search */}
-              <div className="relative flex-1 min-w-[220px]">
+              <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search by patient name, mobile, OPD No, or UHID..."
-                  className="pl-10"
+                  placeholder="Search name, mobile, OPD, UHID..."
+                  className="pl-10 h-10 sm:h-11 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl font-medium"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
 
-              {/* Month Filter */}
-              <Select
-                value={filterMonth}
-                onValueChange={(val) => {
-                  setFilterMonth(val)
-                  if (val !== "all") setActiveTab("all")
-                }}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="All Months" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Months</SelectItem>
-                  <SelectItem value="01">January</SelectItem>
-                  <SelectItem value="02">February</SelectItem>
-                  <SelectItem value="03">March</SelectItem>
-                  <SelectItem value="04">April</SelectItem>
-                  <SelectItem value="05">May</SelectItem>
-                  <SelectItem value="06">June</SelectItem>
-                  <SelectItem value="07">July</SelectItem>
-                  <SelectItem value="08">August</SelectItem>
-                  <SelectItem value="09">September</SelectItem>
-                  <SelectItem value="10">October</SelectItem>
-                  <SelectItem value="11">November</SelectItem>
-                  <SelectItem value="12">December</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Year Filter */}
-              <Select
-                value={filterYear}
-                onValueChange={(val) => {
-                  setFilterYear(val)
-                  if (val !== "all") setActiveTab("all")
-                }}
-              >
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="All Years" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Reset Filters */}
-              {hasFilters && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setFilterMonth("all")
-                    setFilterYear("all")
-                    setActiveTab("today")
+              <div className="flex flex-row items-center gap-2 sm:gap-3 flex-1 lg:flex-none">
+                {/* Month Filter */}
+                <Select
+                  value={filterMonth}
+                  onValueChange={(val) => {
+                    setFilterMonth(val)
+                    if (val !== "all") setActiveTab("all")
                   }}
-                  className="h-10 w-10 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  title="Reset Filters"
                 >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              )}
+                  <SelectTrigger className="flex-1 lg:w-[140px] h-10 sm:h-11 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl font-medium text-xs sm:text-sm">
+                    <SelectValue placeholder="All Months" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="all">All Months</SelectItem>
+                    <SelectItem value="01">January</SelectItem>
+                    <SelectItem value="02">February</SelectItem>
+                    <SelectItem value="03">March</SelectItem>
+                    <SelectItem value="04">April</SelectItem>
+                    <SelectItem value="05">May</SelectItem>
+                    <SelectItem value="06">June</SelectItem>
+                    <SelectItem value="07">July</SelectItem>
+                    <SelectItem value="08">August</SelectItem>
+                    <SelectItem value="09">September</SelectItem>
+                    <SelectItem value="10">October</SelectItem>
+                    <SelectItem value="11">November</SelectItem>
+                    <SelectItem value="12">December</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Year Filter */}
+                <Select
+                  value={filterYear}
+                  onValueChange={(val) => {
+                    setFilterYear(val)
+                    if (val !== "all") setActiveTab("all")
+                  }}
+                >
+                  <SelectTrigger className="flex-1 lg:w-[120px] h-10 sm:h-11 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl font-medium text-xs sm:text-sm">
+                    <SelectValue placeholder="All Years" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="all">All Years</SelectItem>
+                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Reset Filters */}
+                {hasFilters && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setFilterMonth("all")
+                      setFilterYear("all")
+                      setActiveTab("today")
+                    }}
+                    className="h-10 w-10 sm:h-11 sm:w-11 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all rounded-xl"
+                    title="Reset Filters"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
 
@@ -275,7 +277,7 @@ export default function OPDListPage() {
                 </div>
 
                 {/* Table */}
-                <div className="rounded-lg border border-border">
+                <div className="rounded-2xl border border-slate-100 dark:border-slate-800 overflow-x-auto bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm shadow-sm">
                   <Table>
                     <TableHeader>
                       <TableRow>

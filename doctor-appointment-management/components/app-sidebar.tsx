@@ -187,7 +187,7 @@ export function AppSidebar() {
             </div>
             {state === "expanded" && (
               <div className="flex flex-col min-w-0 animate-in fade-in duration-500">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70 mb-0.5 drop-shadow-sm">
+                <span className="text-[18px] font-black uppercase tracking-[0.2em] text-[#e05d38] mb-0.5 drop-shadow-sm">
                   Appointment
                 </span>
                 <span className="text-sm font-black tracking-tight text-sidebar-foreground leading-none whitespace-normal mb-1.5" title="Doctor's Appointments">
@@ -203,12 +203,30 @@ export function AppSidebar() {
             )}
           </Link>
           {state === "expanded" && (
-            <SidebarTrigger className="h-8 w-8 rounded-lg border border-sidebar-border/50 bg-sidebar-accent/50 hover:bg-primary/10 hover:text-primary transition-all duration-300" />
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarTrigger className="h-8 w-8 rounded-lg border border-sidebar-border/50 bg-sidebar-accent/50 hover:bg-primary/10 hover:text-primary transition-all duration-300 mb-12 ml-1" />
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Collapse Sidebar</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
         {state === "collapsed" && (
           <div className="flex justify-center mt-2">
-            <SidebarTrigger className="h-8 w-8 rounded-lg border border-sidebar-border/50 bg-sidebar-accent/50 hover:bg-primary/10 hover:text-primary transition-all duration-300" />
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarTrigger className="h-8 w-8 rounded-lg border border-sidebar-border/50 bg-sidebar-accent/50 hover:bg-primary/10 hover:text-primary transition-all duration-300" />
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Expand Sidebar</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         )}
       </SidebarHeader>
@@ -369,7 +387,7 @@ export function AppSidebar() {
             <div className={cn(state === "expanded" ? "flex-1" : "w-10 h-10")}>
               <ModeToggle className={cn(state === "expanded" && "w-full h-12")} />
             </div>
-            
+
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>

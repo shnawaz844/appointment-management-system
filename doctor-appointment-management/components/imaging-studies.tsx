@@ -23,7 +23,7 @@ export function ImagingStudies({ studies = [] }: ImagingStudiesProps) {
           <CardDescription>X-rays, CT scans, MRI, and ultrasound imaging</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {studies.length > 0 ? studies.map((study) => (
               <div key={study.id} className="rounded-lg border border-border p-4 hover:bg-accent/50 transition-colors">
                 <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">

@@ -75,7 +75,7 @@ export default function PrescriptionsPage() {
   const paginatedPrescriptions = filteredPrescriptions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   return (
-    <main className="relative flex-1 min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-blue-900/20">
+    <main className="relative flex-1 min-h-screen overflow-x-hidden overflow-y-auto bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-blue-900/20">
       {/* Decorative Background Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="blob top-[-10%] left-[-10%]" />
@@ -83,14 +83,14 @@ export default function PrescriptionsPage() {
         <div className="blob blob-3" />
       </div>
 
-      <div className="container relative py-10 px-8">
+      <div className="container mx-auto relative py-6 md:py-10 px-4 md:px-8">
         <div className="mb-10">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Prescriptions</h1>
           <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">Manage prescriptions and medications</p>
         </div>
 
         {/* Pharmacy Stats */}
-        <div className="grid gap-8 md:grid-cols-3 mb-10">
+        <div className="grid gap-4 md:gap-8 grid-cols-1 md:grid-cols-3 mb-8 md:mb-10">
           <Card
             className={`group relative overflow-hidden border-none backdrop-blur-xl border-t border-l border-white/40 dark:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 cursor-pointer ${filterStatus === "Active" ? "bg-blue-500/20 dark:bg-blue-600/30 shadow-lg shadow-blue-500/10" : "bg-blue-500/10 dark:bg-blue-600/20"
               }`}
@@ -153,29 +153,30 @@ export default function PrescriptionsPage() {
         </div>
 
         {/* Prescriptions Table */}
-        <div className="glass-premium rounded-3xl p-8 hover:shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-1000">
+        <div className="glass-premium rounded-3xl p-4 md:p-8 hover:shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-1000">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white">Recent Prescriptions</h3>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Detailed overview of medication issuances</p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative group w-64">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="relative group w-full sm:w-64">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                 <Input
-                  className="pl-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-blue-500/20"
+                  className="pl-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-blue-500/20 w-full"
                   placeholder="Search name or ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <CreatePrescriptionDialog onCreated={fetchPrescriptions}>
-                <Button className="h-11 rounded-xl px-6 bg-[#e05d38] text-white hover:bg-[#c94f2f] hover:scale-105 transition-transform">
+                <Button className="w-full sm:w-auto h-11 rounded-xl px-6 bg-[#e05d38] text-white hover:bg-[#c94f2f] hover:scale-105 transition-transform">
                   <Pill className="h-4 w-4 mr-2" />
                   Create Prescription
                 </Button>
               </CreatePrescriptionDialog>
             </div>
+
           </div>
 
           <div>
@@ -191,7 +192,7 @@ export default function PrescriptionsPage() {
                 <p className="text-sm font-medium text-slate-500">Create the first prescription to get started.</p>
               </div>
             ) : (
-              <div className="rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden bg-white/30 dark:bg-slate-950/30">
+              <div className="rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-x-auto bg-white/30 dark:bg-slate-950/30">
                 <Table>
                   <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                     <TableRow className="hover:bg-transparent border-slate-200/50 dark:border-slate-800/50">
@@ -254,10 +255,11 @@ export default function PrescriptionsPage() {
               </div>
             )}
             {!loading && totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, filteredPrescriptions.length)}</span> of <span className="font-bold">{filteredPrescriptions.length}</span> prescriptions
                 </p>
+
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"

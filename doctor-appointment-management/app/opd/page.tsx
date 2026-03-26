@@ -308,21 +308,21 @@ export default function OPDPage() {
     }
 
     return (
-        <div className="p-4 md:p-8 max-w-5xl mx-auto pb-24">
-            <div className="flex justify-between items-center mb-8 no-print">
+        <div className="p-4 md:p-8 max-w-5xl mx-auto pb-24 min-h-screen overflow-x-hidden">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 no-print gap-6">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-2xl">
+                    <div className="p-3 bg-primary/10 rounded-2xl shrink-0">
                         <Activity className="h-8 w-8 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight text-foreground">OPD Registration</h1>
-                        <p className="text-muted-foreground font-semibold">Hospital Management System</p>
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">OPD Registration</h1>
+                        <p className="text-xs md:text-sm text-muted-foreground font-bold uppercase tracking-wider">Hospital Management System</p>
                     </div>
                 </div>
                 <Button
                     onClick={handlePrint}
                     disabled={isSaving}
-                    className="rounded-2xl gap-3 px-8 h-12 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all font-bold text-base"
+                    className="w-full md:w-auto rounded-full gap-3 px-8 h-12 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all font-bold text-base"
                 >
                     {isSaving ? <Activity className="h-5 w-5 animate-spin" /> : <Printer className="h-5 w-5" />}
                     {isSaving ? "Saving..." : "Print Form & Save"}
@@ -330,7 +330,7 @@ export default function OPDPage() {
             </div>
 
             {/* Input Form UI (Visible on screen) */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-4xl p-8 no-print">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-3xl md:rounded-4xl p-4 sm:p-8 no-print">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <InputFormGroup label="UHID No." name="uhidNo" value={formData.uhidNo} onChange={handleChange} error={errors.uhidNo} />
                     <InputFormGroup label="Date" name="date" value={formData.date} onChange={handleChange} error={errors.date} />

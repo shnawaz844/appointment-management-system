@@ -136,7 +136,7 @@ export default function SettingsPage() {
 
   return (
     <main className="flex-1">
-      <div className="container py-8 px-8">
+      <div className="container mx-auto py-6 md:py-8 px-4 md:px-8">
         <PageHeader title="Settings" description="Manage your account and system preferences" />
 
         <div className="grid gap-6 max-w-3xl">
@@ -204,7 +204,7 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <div className="grid gap-4">
                       {users.filter(u => u.email !== user.email).map((u) => (
-                        <div key={u._id} className="flex items-center justify-between p-4 rounded-xl bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-slate-800">
+                        <div key={u._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-slate-800 gap-4">
                           <div>
                             <p className="font-bold text-foreground">{u.name}</p>
                             <p className="text-xs text-muted-foreground">{u.email}</p>
@@ -219,12 +219,13 @@ export default function SettingsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleAdminResetPassword(u._id)}
-                            className="text-xs font-bold border-primary/20 hover:bg-primary/10 transition-all gap-2"
+                            className="w-full sm:w-auto text-xs font-bold border-primary/20 hover:bg-primary/10 transition-all gap-2"
                           >
                             <Key className="h-3 w-3" />
                             Reset Password
                           </Button>
                         </div>
+
                       ))}
                       {users.filter(u => u.email !== user.email).length === 0 && (
                         <p className="text-center text-sm text-muted-foreground py-4 italic">No other users found.</p>
