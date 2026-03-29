@@ -278,7 +278,7 @@ export function CreateAppointmentDialog({ children, onSuccess, preselectedPatien
                 <div className="space-y-2">
                   <Label htmlFor="gender" className="text-xs font-bold text-slate-700 dark:text-slate-300">Gender *</Label>
                   <Select value={formData.gender} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
-                    <SelectTrigger id="gender" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                    <SelectTrigger id="gender" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
@@ -308,7 +308,7 @@ export function CreateAppointmentDialog({ children, onSuccess, preselectedPatien
               <div className="space-y-2">
                 <Label htmlFor="doctor" className="text-xs font-bold text-slate-700 dark:text-slate-300">Doctor *</Label>
                 <Select value={formData.doctor} onValueChange={handleDoctorChange}>
-                  <SelectTrigger id="doctor" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                  <SelectTrigger id="doctor" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                     <SelectValue placeholder="Select doctor" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -324,7 +324,7 @@ export function CreateAppointmentDialog({ children, onSuccess, preselectedPatien
               <div className="space-y-2">
                 <Label htmlFor="visitType" className="text-xs font-bold text-slate-700 dark:text-slate-300">Visit Type *</Label>
                 <Select value={formData.visitType} onValueChange={(v) => setFormData({ ...formData, visitType: v })}>
-                  <SelectTrigger id="visitType" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                  <SelectTrigger id="visitType" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">

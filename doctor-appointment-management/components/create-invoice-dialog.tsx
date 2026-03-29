@@ -112,7 +112,7 @@ export function CreateInvoiceDialog({ children }: any) {
               <div className="space-y-2">
                 <Label htmlFor="patientId" className="text-xs font-bold text-slate-700 dark:text-slate-300">Patient / OPD NO *</Label>
                 <Select value={patientId} onValueChange={setPatientId} disabled={loadingPatients}>
-                  <SelectTrigger id="patientId" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                  <SelectTrigger id="patientId" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                     {loadingPatients ? (
                       <span className="flex items-center gap-2 text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -140,7 +140,7 @@ export function CreateInvoiceDialog({ children }: any) {
               <div className="space-y-2">
                 <Label htmlFor="invoiceType" className="text-xs font-bold text-slate-700 dark:text-slate-300">Invoice Type *</Label>
                 <Select value={invoiceType} onValueChange={setInvoiceType}>
-                  <SelectTrigger id="invoiceType" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                  <SelectTrigger id="invoiceType" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -160,7 +160,7 @@ export function CreateInvoiceDialog({ children }: any) {
               <div className="space-y-2">
                 <Label htmlFor="status" className="text-xs font-bold text-slate-700 dark:text-slate-300">Invoice Status *</Label>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger id="status" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                  <SelectTrigger id="status" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -172,7 +172,7 @@ export function CreateInvoiceDialog({ children }: any) {
               <div className="space-y-2">
                 <Label htmlFor="paymentMethod" className="text-xs font-bold text-slate-700 dark:text-slate-300">Payment Method *</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger id="paymentMethod" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                  <SelectTrigger id="paymentMethod" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                     <SelectValue placeholder="Select method" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">

@@ -144,7 +144,7 @@ export function CreateLabResultDialog({ children, onCreated }: CreateLabResultDi
                         }
                       }}
                     >
-                      <SelectTrigger id="patientName" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all">
+                      <SelectTrigger id="patientName" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all">
                         <SelectValue placeholder="Select patient" />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-slate-200/60 dark:border-white/10 backdrop-blur-xl">
@@ -165,7 +165,7 @@ export function CreateLabResultDialog({ children, onCreated }: CreateLabResultDi
                       ATTENDING DOCTOR <span className="text-rose-500">*</span>
                     </Label>
                     <Select value={doctorName} onValueChange={setDoctorName}>
-                      <SelectTrigger id="doctorName" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all">
+                      <SelectTrigger id="doctorName" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all">
                         <SelectValue placeholder="Select doctor" />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-slate-200/60 dark:border-white/10 backdrop-blur-xl">
@@ -212,7 +212,7 @@ export function CreateLabResultDialog({ children, onCreated }: CreateLabResultDi
                   <div className="space-y-2.5">
                     <Label htmlFor="testType" className="text-xs font-bold text-slate-500 dark:text-slate-400">TEST TYPE</Label>
                     <Select value={testType} onValueChange={setTestType}>
-                      <SelectTrigger id="testType" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                      <SelectTrigger id="testType" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-slate-200/60 dark:border-white/10 backdrop-blur-xl">
@@ -240,7 +240,7 @@ export function CreateLabResultDialog({ children, onCreated }: CreateLabResultDi
                       STATUS
                     </Label>
                     <Select value={status} onValueChange={setStatus}>
-                      <SelectTrigger id="status" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                      <SelectTrigger id="status" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
                         <div className="flex items-center gap-2">
                           <div className={`w-1.5 h-1.5 rounded-full ${
                             status === 'Pending' ? 'bg-amber-500 animate-pulse' : 
@@ -262,7 +262,7 @@ export function CreateLabResultDialog({ children, onCreated }: CreateLabResultDi
                       RESULT
                     </Label>
                     <Select value={result} onValueChange={setResult}>
-                      <SelectTrigger id="result" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                      <SelectTrigger id="result" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
                         <SelectValue placeholder="Result" />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl backdrop-blur-xl">

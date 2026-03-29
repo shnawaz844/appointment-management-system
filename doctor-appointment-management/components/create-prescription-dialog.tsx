@@ -388,7 +388,7 @@ export function CreatePrescriptionDialog({ children, onCreated, preselectedPatie
               <div className="space-y-2 min-w-0">
                 <Label htmlFor="status" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Initial Status</Label>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger id="status" className="h-12 rounded-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-[#e05d38]/20 focus:border-[#e05d38] shadow-sm transition-all">
+                  <SelectTrigger id="status" className="w-full h-12 rounded-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-[#e05d38]/20 focus:border-[#e05d38] shadow-sm transition-all">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-slate-200 dark:border-slate-800">
@@ -400,7 +400,7 @@ export function CreatePrescriptionDialog({ children, onCreated, preselectedPatie
               <div className="space-y-2 min-w-0">
                 <Label htmlFor="duration" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Treatment Duration</Label>
                 <Select value={duration} onValueChange={setDuration}>
-                  <SelectTrigger id="duration" className="h-12 rounded-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-[#e05d38]/20 focus:border-[#e05d38] shadow-sm transition-all">
+                  <SelectTrigger id="duration" className="w-full h-12 rounded-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-[#e05d38]/20 focus:border-[#e05d38] shadow-sm transition-all">
                     <SelectValue placeholder="Select timeframe" />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-slate-200 dark:border-slate-800">

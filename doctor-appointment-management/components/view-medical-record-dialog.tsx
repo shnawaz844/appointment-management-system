@@ -15,15 +15,20 @@ interface ViewMedicalRecordDialogProps {
         doctor: string
         status: string
         summary: string
+        attachment_url?: string
+        attachment_type?: string
     }
     children: React.ReactNode
 }
 
 export function ViewMedicalRecordDialog({ record, children }: ViewMedicalRecordDialogProps) {
+    const isImage = record.attachment_type?.startsWith("image/")
+    const isPdf = record.attachment_type?.includes("pdf")
+
     return (
         <Dialog>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl p-0">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl p-0 custom-scrollbar">
                 <DialogHeader className="px-8 pt-8 pb-4 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between">
                         <div>
@@ -78,17 +83,75 @@ export function ViewMedicalRecordDialog({ record, children }: ViewMedicalRecordD
 
                     <Separator className="bg-slate-100 dark:bg-slate-800" />
 
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <FileText className="h-3 w-3" />
-                            Clinical Summary
+                    {record.summary && (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <FileText className="h-3 w-3" />
+                                Clinical Summary
+                            </div>
+                            <div className="p-6 bg-slate-50/80 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-inner">
+                                <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 font-medium italic">
+                                    "{record.summary}"
+                                </p>
+                            </div>
                         </div>
-                        <div className="p-6 bg-slate-50/80 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-inner">
-                            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 font-medium italic">
-                                "{record.summary}"
-                            </p>
+                    )}
+
+                    {record.attachment_url && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    <Clock className="h-3 w-3" />
+                                    Attached Report
+                                </div>
+                                <a
+                                    href={record.attachment_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[10px] font-black text-[#e05d38] hover:underline uppercase tracking-widest"
+                                >
+                                    Open Full View
+                                </a>
+                            </div>
+
+                            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-2 min-h-[200px]">
+                                {isImage ? (
+                                    <img
+                                        src={record.attachment_url}
+                                        alt="Medical Attachment"
+                                        className="max-w-full h-auto rounded-2xl shadow-lg"
+                                    />
+                                ) : isPdf ? (
+                                    <div className="flex flex-col items-center gap-4 py-12">
+                                        <div className="p-4 bg-rose-500/10 rounded-2xl">
+                                            <FileText className="w-12 h-12 text-rose-500" />
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="font-bold text-slate-900 dark:text-white">PDF Medical Report</p>
+                                            <p className="text-xs text-slate-500 mt-1">Click the button below to view the full document</p>
+                                        </div>
+                                        <a
+                                            href={record.attachment_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-6 py-2.5 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 transition-colors"
+                                        >
+                                            View PDF Report
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <a
+                                        href={record.attachment_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm font-bold text-blue-600 hover:underline"
+                                    >
+                                        Download Clinical Attachment
+                                    </a>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>

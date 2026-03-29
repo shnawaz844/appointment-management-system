@@ -27,14 +27,16 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
     { data: patientAppointmentsData },
     { data: patientMedicalRecordsData },
     { data: patientImagingStudiesData },
-    { data: patientPrescriptionsData }
+    { data: patientPrescriptionsData },
+    { data: specialtiesData }
   ] = await Promise.all([
     supabase.from("patients").select("*").eq("id", id).single(),
     supabase.from("reports").select("*").eq("patient_id", id),
     supabase.from("appointments").select("*").eq("patient_id", id).order("date", { ascending: false }),
     supabase.from("medicalrecords").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
     supabase.from("imagingstudies").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
-    supabase.from("prescriptions").select("*").eq("patient_id", id).order("issued", { ascending: false })
+    supabase.from("prescriptions").select("*").eq("patient_id", id).order("issued", { ascending: false }),
+    supabase.from("specialties").select("*")
   ])
 
   const patientReports = patientReportsData || []
@@ -42,6 +44,50 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
   const patientMedicalRecords = patientMedicalRecordsData || []
   const patientImagingStudies = patientImagingStudiesData || []
   const patientPrescriptions = patientPrescriptionsData || []
+  const specialties = specialtiesData || []
+
+  // Fetch doctor's specialty based on patient.doctor or patient.diagnosis
+  let doctorSpecialty = "General"
+  
+  if (patient?.doctor || patient?.diagnosis) {
+    // 1. Try to find the doctor in the doctors table
+    if (patient.doctor) {
+      const cleanedName = patient.doctor.replace(/^Dr\.\s*/i, "").trim();
+      const { data: doctorData } = await supabase
+        .from("doctors")
+        .select("*")
+        .or(`name.ilike.%${cleanedName}%, name.eq.${patient.doctor}`)
+        .maybeSingle();
+
+      if (doctorData?.specialty_id) {
+        // MANUAL JOIN: find the specialty name in the specialties list
+        const foundSpecialty = specialties.find((s: any) => s.id === doctorData.specialty_id || s._id === doctorData.specialty_id);
+        if (foundSpecialty) {
+          doctorSpecialty = foundSpecialty.name;
+        }
+      }
+    }
+
+    // 2. Fallback: If doctor specialty is still General, check diagnosis keywords
+    if (doctorSpecialty === "General" && patient.diagnosis) {
+      doctorSpecialty = patient.diagnosis;
+    }
+  }
+
+  // Imaging specialty mapping
+  const getImagingDescription = (specialty: any) => {
+    const s = (typeof specialty === 'string' ? specialty : specialty?.name || "").toLowerCase().trim();
+    
+    if (s.includes("cardio")) return "Echocardiogram, Stress Test, ECG, and Cardiac MRI"
+    if (s.includes("neuro")) return "Brain MRI, CT Head, EEG, and Nerve Conduction Studies"
+    if (s.includes("ortho")) return "X-rays, Joint MRI, Bone CT scan, and Arthroscopy"
+    if (s.includes("gastro")) return "Endoscopy, Colonoscopy, Abdominal Ultrasound, and Gastric Emptying Study"
+    if (s.includes("dental") || s.includes("dentist")) return "Dental X-rays, OPG, and CBCT"
+    if (s.includes("physio") || s.includes("rehab")) return "Functional Assessment, Gait Analysis, and Range of Motion Testing"
+    if (s.includes("chest") || s.includes("pulmono")) return "Chest X-ray, CT Thorax, and Lung Ultrasound"
+    
+    return "X-rays, CT scans, MRI, and ultrasound imaging"
+  }
 
   if (!patient) {
 
@@ -309,13 +355,28 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                             {record.status}
                           </Badge>
                           <div className="flex items-center gap-1">
+                            {record.attachment_url && (
+                              <a
+                                href={record.attachment_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="h-8 w-8 flex items-center justify-center rounded-lg text-[#e05d38] hover:bg-[#e05d38]/10 transition-all"
+                                title="View Attachment"
+                              >
+                                {record.attachment_type?.startsWith("image/") ? (
+                                  <FileImage className="h-4 w-4" />
+                                ) : (
+                                  <ExternalLink className="h-4 w-4" />
+                                )}
+                              </a>
+                            )}
                             <ViewMedicalRecordDialog record={record}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 transition-all">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 transition-all" title="View Details">
                                 <Eye className="h-4 w-4" />
                               </Button>
                             </ViewMedicalRecordDialog>
                             <DeleteReportDialog reportId={record.id} reportType={record.record_type}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-all">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-all" title="Delete">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </DeleteReportDialog>
@@ -340,8 +401,13 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             <Card className="rounded-3xl border-none shadow-xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl overflow-hidden">
               <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-8 py-6 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <CardTitle className="text-xl font-black text-slate-900 dark:text-white">Imaging Studies</CardTitle>
-                  <CardDescription className="text-xs font-medium text-slate-500">X-rays, CT scans, MRI, and ultrasound imaging</CardDescription>
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="text-xl font-black text-slate-900 dark:text-white">Imaging Studies</CardTitle>
+                    <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-400 border-slate-200">
+                      {doctorSpecialty}
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-xs font-medium text-slate-500">{getImagingDescription(doctorSpecialty)}</CardDescription>
                 </div>
                 <CreateImagingDialog
                   preselectedPatientId={patient.id}

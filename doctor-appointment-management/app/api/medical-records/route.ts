@@ -40,14 +40,20 @@ export async function POST(request: Request) {
             date: body.date || new Date().toISOString().split("T")[0],
             doctor: body.doctor || session.name,
             status: body.status || "Active",
-            summary: body.summary,
+            summary: body.summary || "",
+            attachment_url: body.attachment_url || body.attachmentUrl,
+            attachment_type: body.attachment_type || body.attachmentType,
         }
 
         const { data, error } = await supabase.from("medicalrecords").insert(mrData).select().single()
         if (error) throw error
         return NextResponse.json(data, { status: 201 })
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to create medical record:", error)
-        return NextResponse.json({ error: "Failed to create medical record" }, { status: 500 })
+        return NextResponse.json({
+            error: "Failed to create medical record",
+            details: error.message || "Unknown error",
+            supabaseError: error
+        }, { status: 500 })
     }
 }

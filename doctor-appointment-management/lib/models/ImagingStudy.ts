@@ -10,7 +10,7 @@ const ImagingStudySchema = new mongoose.Schema(
         modality: {
             type: String,
             required: true,
-            enum: ["X-Ray", "CT", "MRI", "Ultrasound"],
+            enum: ["X-Ray", "CT", "MRI", "Ultrasound", "ECG", "EEG", "EMG", "Stress Test", "Holter Monitor", "Other"],
         },
         date: { type: String, required: true },
         month: { type: String, required: true },

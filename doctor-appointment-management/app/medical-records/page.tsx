@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
-import { FileText, Download, Eye, X, Plus, Loader2, Search, Activity, Clock, Users } from "lucide-react"
+import { FileText, Download, Eye, X, Plus, Loader2, Search, Activity, Clock, Users, ExternalLink } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CreateMedicalRecordDialog } from "@/components/create-medical-record-dialog"
@@ -22,6 +22,8 @@ interface MedicalRecord {
   doctor: string
   status: "Active" | "Archived"
   summary: string
+  attachment_url?: string
+  attachment_type?: string
 }
 
 export default function MedicalRecordsPage() {
@@ -287,10 +289,21 @@ export default function MedicalRecordsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-1 justify-end">
-                          <Button variant="ghost" size="icon" onClick={() => openRecord(record)} className="hover:bg-blue-500/10 hover:text-blue-600 dark:hover:bg-blue-400/10 rounded-xl">
+                          {record.attachment_url && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-[#e05d38]/70 hover:bg-[#e05d38]/10 hover:text-[#e05d38] rounded-xl"
+                              onClick={(e) => { e.stopPropagation(); window.open(record.attachment_url, '_blank'); }}
+                              title="View Attachment"
+                            >
+                              <ExternalLink className="h-4.5 w-4.5" />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" onClick={() => openRecord(record)} className="hover:bg-blue-500/10 hover:text-blue-600 dark:hover:bg-blue-400/10 rounded-xl" title="View Details">
                             <Eye className="h-4.5 w-4.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:bg-emerald-400/10 rounded-xl">
+                          <Button variant="ghost" size="icon" className="hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:bg-emerald-400/10 rounded-xl" title="Download">
                             <Download className="h-4.5 w-4.5" />
                           </Button>
                         </div>
@@ -417,6 +430,44 @@ export default function MedicalRecordsPage() {
                   </div>
                 )}
               </div>
+
+              {selectedRecord.attachment_url && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Medical Attachment</p>
+                    <a
+                      href={selectedRecord.attachment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-black text-[#e05d38] hover:underline uppercase tracking-widest"
+                    >
+                      Open Full View
+                    </a>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-2 min-h-[150px]">
+                    {selectedRecord.attachment_type?.startsWith("image/") ? (
+                      <img
+                        src={selectedRecord.attachment_url}
+                        alt="Medical Attachment"
+                        className="max-w-full h-auto rounded-xl shadow-lg"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 py-8">
+                        <FileText className="w-10 h-10 text-rose-500" />
+                        <p className="text-xs font-bold text-slate-600 dark:text-slate-400">PDF Document Attached</p>
+                        <a
+                          href={selectedRecord.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 px-4 py-1.5 bg-rose-500 text-white rounded-lg font-bold text-xs hover:bg-rose-600 transition-colors"
+                        >
+                          View Document
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

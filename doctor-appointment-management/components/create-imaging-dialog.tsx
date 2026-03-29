@@ -53,6 +53,11 @@ const SPECIALTY_BODY_PARTS: Record<string, string[]> = {
     "Cardiology": ["Heart", "Eco Heart", "Chest", "Aorta", "Other"],
     "Orthopedics": ["Knee", "Lumbar Spine", "Cervical Spine", "Shoulder", "Ankle", "Hip", "Wrist", "Elbow", "Foot", "Thoracic Spine", "Other"],
     "Neurology": ["Brain", "Neck", "Cervical Spine", "Lumbar Spine", "Other"],
+    "ENT": ["Ear", "Nose", "Throat", "Neck", "Sinus", "Other"],
+    "Gynecology": ["Uterine", "Ovaries", "Pelvis", "Breast", "Fallopian", "Other"],
+    "Gastroenterology": ["Abdomen", "Stomach", "Liver", "Intestines", "Pancreas", "Other"],
+    "Pulmonology": ["Lungs", "Chest", "Bronchi", "Pleura", "Other"],
+    "Urology": ["Kidneys", "Bladder", "Prostate", "Urinary Tract", "Other"],
     "General": ["Knee", "Lumbar Spine", "Cervical Spine", "Shoulder", "Ankle", "Hip", "Wrist", "Elbow", "Foot", "Thoracic Spine", "Heart", "Eco Heart", "Chest", "Brain", "Abdomen", "Pelvis", "Neck", "Other"]
 }
 
@@ -60,7 +65,60 @@ const SPECIALTY_MODALITIES: Record<string, string[]> = {
     "Cardiology": ["ECG", "Echocardiogram", "Stress Test", "Holter Monitor", "CT", "MRI", "Ultrasound", "Other"],
     "Orthopedics": ["X-Ray", "CT", "MRI", "Ultrasound", "Other"],
     "Neurology": ["MRI", "CT", "EEG", "EMG", "Other"],
+    "ENT": ["Endoscopy", "CT", "MRI", "X-Ray", "Ultrasound", "Other"],
+    "Gynecology": ["Ultrasound", "MRI", "CT", "Mammography", "Other"],
+    "Gastroenterology": ["Ultrasound", "CT", "MRI", "Endoscopy", "Colonoscopy", "Other"],
+    "Pulmonology": ["Chest X-Ray", "CT", "MRI", "Spirometry", "Other"],
+    "Urology": ["Ultrasound", "CT", "MRI", "Cystoscopy", "Other"],
     "General": ["X-Ray", "CT", "MRI", "Ultrasound", "ECG", "Echocardiogram", "EEG", "Other"]
+}
+
+const BODY_PART_MODALITIES: Record<string, string[]> = {
+    // Cardiology
+    "Heart": ["ECG", "Echocardiogram", "Stress Test", "Holter Monitor", "CT", "MRI", "Ultrasound", "Other"],
+    "Eco Heart": ["ECG", "Echocardiogram", "Stress Test", "Holter Monitor", "CT", "MRI", "Ultrasound", "Other"],
+    "Aorta": ["ECG", "Echocardiogram", "Stress Test", "CT", "MRI", "Ultrasound", "Other"],
+    "Chest": ["X-Ray", "CT", "MRI", "Ultrasound", "Chest X-Ray", "ECG", "Echocardiogram", "Other"],
+    // Orthopedics
+    "Knee": ["X-Ray", "CT", "MRI", "Ultrasound", "Other"],
+    "Lumbar Spine": ["X-Ray", "CT", "MRI", "Other"],
+    "Cervical Spine": ["X-Ray", "CT", "MRI", "Other"],
+    "Shoulder": ["X-Ray", "CT", "MRI", "Ultrasound", "Other"],
+    "Ankle": ["X-Ray", "CT", "MRI", "Ultrasound", "Other"],
+    "Hip": ["X-Ray", "CT", "MRI", "Ultrasound", "Other"],
+    "Wrist": ["X-Ray", "CT", "MRI", "Ultrasound", "Other"],
+    "Elbow": ["X-Ray", "CT", "MRI", "Ultrasound", "Other"],
+    "Foot": ["X-Ray", "CT", "MRI", "Ultrasound", "Other"],
+    "Thoracic Spine": ["X-Ray", "CT", "MRI", "Other"],
+    // Neurology
+    "Brain": ["MRI", "CT", "EEG", "Other"],
+    "Neck": ["MRI", "CT", "Ultrasound", "X-Ray", "Other"],
+    // ENT
+    "Ear": ["Endoscopy", "CT", "MRI", "X-Ray", "Ultrasound", "Other"],
+    "Nose": ["Endoscopy", "CT", "MRI", "X-Ray", "Ultrasound", "Other"],
+    "Throat": ["Endoscopy", "CT", "MRI", "X-Ray", "Ultrasound", "Other"],
+    "Sinus": ["Endoscopy", "CT", "MRI", "X-Ray", "Ultrasound", "Other"],
+    // Gynecology
+    "Uterine": ["Ultrasound", "MRI", "CT", "Other"],
+    "Ovaries": ["Ultrasound", "MRI", "CT", "Other"],
+    "Pelvis": ["Ultrasound", "MRI", "CT", "X-Ray", "Other"],
+    "Breast": ["Mammography", "Ultrasound", "MRI", "CT", "Other"],
+    "Fallopian": ["Ultrasound", "MRI", "CT", "Other"],
+    // Gastroenterology
+    "Abdomen": ["Ultrasound", "CT", "MRI", "Endoscopy", "Colonoscopy", "Other"],
+    "Stomach": ["Ultrasound", "CT", "MRI", "Endoscopy", "Colonoscopy", "Other"],
+    "Liver": ["Ultrasound", "CT", "MRI", "Other"],
+    "Intestines": ["Ultrasound", "CT", "MRI", "Endoscopy", "Colonoscopy", "Other"],
+    "Pancreas": ["Ultrasound", "CT", "MRI", "Other"],
+    // Pulmonology
+    "Lungs": ["Chest X-Ray", "CT", "MRI", "Spirometry", "Other"],
+    "Bronchi": ["Chest X-Ray", "CT", "MRI", "Spirometry", "Other"],
+    "Pleura": ["Chest X-Ray", "CT", "MRI", "Spirometry", "Other"],
+    // Urology
+    "Kidneys": ["Ultrasound", "CT", "MRI", "Other"],
+    "Bladder": ["Ultrasound", "CT", "MRI", "Cystoscopy", "Other"],
+    "Prostate": ["Ultrasound", "MRI", "CT", "Cystoscopy", "Other"],
+    "Urinary Tract": ["Ultrasound", "CT", "MRI", "Cystoscopy", "Other"],
 }
 
 const MODALITY_DISPLAY_NAMES: Record<string, string> = {
@@ -73,15 +131,40 @@ const MODALITY_DISPLAY_NAMES: Record<string, string> = {
 
 const MODALITY_DB_MAPPING: Record<string, string> = {
     "Echocardiogram": "Ultrasound",
-    "ECG": "Other",
-    "EEG": "Other",
-    "EMG": "Other",
-    "Stress Test": "Other",
-    "Holter Monitor": "Other",
+    "ECG": "ECG",
+    "EEG": "EEG",
+    "EMG": "EMG",
+    "Stress Test": "Stress Test",
+    "Holter Monitor": "Holter Monitor",
 }
 
 const DEFAULT_BODY_PARTS = SPECIALTY_BODY_PARTS["General"]
 const DEFAULT_MODALITIES = SPECIALTY_MODALITIES["General"]
+
+const ALL_MODALITIES = Array.from(new Set(Object.values(SPECIALTY_MODALITIES).flat())).sort((a, b) => {
+    if (a === "Other") return 1;
+    if (b === "Other") return -1;
+    return a.localeCompare(b);
+})
+
+const normalizeSpecialty = (name?: string): string => {
+    if (!name) return "General"
+    const lowerName = name.toLowerCase()
+    if (lowerName.includes("cardio")) return "Cardiology"
+    if (lowerName.includes("ortho")) return "Orthopedics"
+    if (lowerName.includes("neuro")) return "Neurology"
+    if (lowerName.includes("ent") || lowerName.includes("oto")) return "ENT"
+    if (lowerName.includes("gyno") || lowerName.includes("obstet") || lowerName.includes("women")) return "Gynecology"
+    if (lowerName.includes("gastro")) return "Gastroenterology"
+    if (lowerName.includes("pulmo")) return "Pulmonology"
+    if (lowerName.includes("uro")) return "Urology"
+    
+    // Exact match search in keys
+    const foundKey = Object.keys(SPECIALTY_BODY_PARTS).find(k => 
+        k.toLowerCase() === lowerName || lowerName.includes(k.toLowerCase())
+    )
+    return foundKey || "General"
+}
 
 export function CreateImagingDialog({
     children,
@@ -101,8 +184,8 @@ export function CreateImagingDialog({
     const [date, setDate] = useState(new Date().toISOString().split("T")[0])
     const [aiFlag, setAiFlag] = useState("Normal")
     const [doctor, setDoctor] = useState(preselectedDoctor || "")
-    const [thumbnail, setThumbnail] = useState<string>("")
-    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [thumbnails, setThumbnails] = useState<string[]>([])
+    const [imageFiles, setImageFiles] = useState<File[]>([])
 
     const [patients, setPatients] = useState<Patient[]>([])
     const [doctors, setDoctors] = useState<Doctor[]>([])
@@ -154,8 +237,9 @@ export function CreateImagingDialog({
                     )
 
                     if (user.role === "DOCTOR" && foundDoc) {
-                        if (foundDoc.specialties?.name) {
-                            setCurrentSpecialty(foundDoc.specialties.name)
+                        const specName = (foundDoc as any).specialties?.name
+                        if (specName) {
+                            setCurrentSpecialty(normalizeSpecialty(specName))
                         }
                         // Always prioritize current doctor if they are adding a study
                         setDoctor(foundDoc.name)
@@ -192,34 +276,39 @@ export function CreateImagingDialog({
         setDate(new Date().toISOString().split("T")[0])
         setAiFlag("Normal")
         setDoctor(preselectedDoctor || "")
-        setThumbnail("")
-        setImageFile(null)
+        setThumbnails([])
+        setImageFiles([])
     }
 
     const handleSubmit = async () => {
         if (!patientName || !patientId || !studyType || !bodyPart || !modality) return
         setLoading(true)
         try {
-            let finalThumbnailUrl = "/placeholder.svg"
-            if (imageFile) {
-                const formData = new FormData()
-                formData.append("file", imageFile)
-                formData.append("bucket", "uploads")
+            let finalImageUrls: string[] = []
+            if (imageFiles.length > 0) {
+                for (const file of imageFiles) {
+                    const formData = new FormData()
+                    formData.append("file", file)
+                    formData.append("bucket", "uploads")
+                    formData.append("patientId", patientId || "anonymous")
 
-                const uploadRes = await fetch("/api/upload", {
-                    method: "POST",
-                    body: formData
-                })
+                    const uploadRes = await fetch("/api/upload", {
+                        method: "POST",
+                        body: formData
+                    })
 
-                if (uploadRes.ok) {
-                    const uploadData = await uploadRes.json()
-                    finalThumbnailUrl = uploadData.url
-                } else {
-                    console.error("Failed to upload image")
-                    alert("Failed to upload image. Please try again.")
-                    setLoading(false)
-                    return
+                    if (uploadRes.ok) {
+                        const uploadData = await uploadRes.json()
+                        finalImageUrls.push(uploadData.url)
+                    } else {
+                        console.error("Failed to upload image")
+                        alert("Failed to upload some images. Please try again.")
+                        setLoading(false)
+                        return
+                    }
                 }
+            } else {
+                finalImageUrls = ["/placeholder.svg"]
             }
 
             const res = await fetch("/api/imaging", {
@@ -234,7 +323,7 @@ export function CreateImagingDialog({
                     date,
                     aiFlag,
                     doctor,
-                    thumbnail: finalThumbnailUrl,
+                    thumbnail: finalImageUrls.length > 1 ? JSON.stringify(finalImageUrls) : (finalImageUrls[0] || "/placeholder.svg"),
                 }),
             })
             if (res.ok) {
@@ -254,14 +343,16 @@ export function CreateImagingDialog({
         }
     }
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            setImageFile(file)
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setThumbnail(reader.result as string)
-            }
-            reader.readAsDataURL(file)
+        const files = Array.from(e.target.files || [])
+        if (files.length > 0) {
+            setImageFiles(prev => [...prev, ...files])
+            files.forEach(file => {
+                const reader = new FileReader()
+                reader.onloadend = () => {
+                    setThumbnails(prev => [...prev, reader.result as string])
+                }
+                reader.readAsDataURL(file)
+            })
         }
     }
 
@@ -394,7 +485,12 @@ export function CreateImagingDialog({
                                                         <SelectValue placeholder="Select modality" />
                                                     </SelectTrigger>
                                                     <SelectContent className="rounded-2xl backdrop-blur-xl">
-                                                        {(SPECIALTY_MODALITIES[currentSpecialty] || DEFAULT_MODALITIES).map((m) => (
+                                                        {(bodyPart === "Other"
+                                                            ? ALL_MODALITIES
+                                                            : (bodyPart && BODY_PART_MODALITIES[bodyPart] 
+                                                                ? BODY_PART_MODALITIES[bodyPart] 
+                                                                : (SPECIALTY_MODALITIES[currentSpecialty] || DEFAULT_MODALITIES))
+                                                        ).map((m) => (
                                                             <SelectItem key={m} value={m} className="rounded-xl">{MODALITY_DISPLAY_NAMES[m] || m}</SelectItem>
                                                         ))}
                                                     </SelectContent>
@@ -469,6 +565,7 @@ export function CreateImagingDialog({
                                                     id="imageUpload"
                                                     type="file"
                                                     accept="image/*"
+                                                    multiple
                                                     onChange={handleImageChange}
                                                     className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 cursor-pointer file:cursor-pointer p-[0.4rem] file:h-full file:border-0 file:bg-pink-100 file:dark:bg-pink-900/30 file:text-pink-700 file:dark:text-pink-300 file:rounded-xl file:px-4 file:mr-3 transition-all"
                                                 />
@@ -478,26 +575,32 @@ export function CreateImagingDialog({
                                             </div>
 
                                             <AnimatePresence>
-                                                {thumbnail && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, scale: 0.9 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.9 }}
-                                                        className="mt-4 rounded-3xl overflow-hidden border-2 border-dashed border-pink-200 dark:border-pink-900/30 bg-white/50 dark:bg-slate-900/50 flex items-center justify-center p-4 h-48 relative group/preview"
-                                                    >
-                                                        <img src={thumbnail} alt="Preview" className="max-h-full object-contain rounded-xl shadow-lg" />
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="icon"
-                                                            className="absolute top-2 right-2 rounded-full w-8 h-8 opacity-0 group-hover/preview:opacity-100 transition-opacity"
-                                                            onClick={() => {
-                                                                setThumbnail("")
-                                                                setImageFile(null)
-                                                            }}
-                                                        >
-                                                            ×
-                                                        </Button>
-                                                    </motion.div>
+                                                {thumbnails.length > 0 && (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
+                                                        {thumbnails.map((src, idx) => (
+                                                            <motion.div
+                                                                key={`${idx}-${src.substring(0, 20)}`}
+                                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                                animate={{ opacity: 1, scale: 1 }}
+                                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                                className="rounded-3xl overflow-hidden border-2 border-dashed border-pink-200 dark:border-pink-900/30 bg-white/50 dark:bg-slate-900/50 flex items-center justify-center p-2 h-32 relative group/preview"
+                                                            >
+                                                                <img src={src} alt={`Preview ${idx + 1}`} className="max-h-full object-contain rounded-xl shadow-lg" />
+                                                                <Button
+                                                                    variant="destructive"
+                                                                    size="icon"
+                                                                    className="absolute top-1 right-1 rounded-full w-6 h-6 opacity-0 group-hover/preview:opacity-100 transition-opacity"
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setThumbnails(prev => prev.filter((_, i) => i !== idx))
+                                                                        setImageFiles(prev => prev.filter((_, i) => i !== idx))
+                                                                    }}
+                                                                >
+                                                                    ×
+                                                                </Button>
+                                                            </motion.div>
+                                                        ))}
+                                                    </div>
                                                 )}
                                             </AnimatePresence>
                                         </div>

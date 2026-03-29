@@ -146,7 +146,7 @@ export function EditAppointmentDialog({
                         <div className="space-y-2">
                             <Label htmlFor="patient_id" className="text-xs font-bold text-slate-700 dark:text-slate-300">Patient ID *</Label>
                             <Select value={formData.patient_id} onValueChange={(v) => setFormData({ ...formData, patient_id: v })}>
-                                <SelectTrigger id="patient_id" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                                <SelectTrigger id="patient_id" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                                     <SelectValue placeholder="Select patient" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl">
@@ -170,7 +170,7 @@ export function EditAppointmentDialog({
                             <div className="space-y-2">
                                 <Label htmlFor="doctor" className="text-xs font-bold text-slate-700 dark:text-slate-300">Doctor *</Label>
                                 <Select value={formData.doctor} onValueChange={handleDoctorChange}>
-                                    <SelectTrigger id="doctor" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                                    <SelectTrigger id="doctor" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                                         <SelectValue placeholder="Select doctor" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -186,7 +186,7 @@ export function EditAppointmentDialog({
                             <div className="space-y-2">
                                 <Label htmlFor="visitType" className="text-xs font-bold text-slate-700 dark:text-slate-300">Visit Type *</Label>
                                 <Select value={formData.visitType} onValueChange={(v) => setFormData({ ...formData, visitType: v })}>
-                                    <SelectTrigger id="visitType" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                                    <SelectTrigger id="visitType" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                                         <SelectValue placeholder="Select" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -214,7 +214,7 @@ export function EditAppointmentDialog({
                         <div className="space-y-2">
                             <Label htmlFor="status" className="text-xs font-bold text-slate-700 dark:text-slate-300">Status *</Label>
                             <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                                <SelectTrigger id="status" className="h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                                <SelectTrigger id="status" className="w-full h-11 rounded-xl bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                                     <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl">

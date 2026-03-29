@@ -4,9 +4,20 @@ import bcrypt from "bcryptjs"
 
 export async function GET() {
     try {
-        const { data, error } = await supabase.from("doctors").select("*").order("name", { ascending: true })
-        if (error) throw error
-        return NextResponse.json(data)
+        const [{ data: doctors, error: dErr }, { data: specialties, error: sErr }] = await Promise.all([
+            supabase.from("doctors").select("*").order("name", { ascending: true }),
+            supabase.from("specialties").select("*")
+        ])
+
+        if (dErr) throw dErr
+        if (sErr) throw sErr
+
+        const combined = doctors.map((d: any) => ({
+            ...d,
+            specialties: specialties?.find((s: any) => s.id === d.specialty_id)
+        }))
+
+        return NextResponse.json(combined)
     } catch (error) {
         console.error("Failed to fetch doctors:", error)
         return NextResponse.json({ error: "Failed to fetch doctors" }, { status: 500 })

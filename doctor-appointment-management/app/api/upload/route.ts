@@ -22,6 +22,7 @@ export async function POST(request: Request) {
         const formData = await request.formData()
         const file = formData.get("file") as File
         const bucket = formData.get("bucket") as string || "uploads"
+        const patientId = formData.get("patientId") as string || "unknown"
 
         if (!file) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 })
@@ -30,15 +31,16 @@ export async function POST(request: Request) {
         const bytes = await file.arrayBuffer()
         const buffer = Buffer.from(bytes)
 
-        // Generate a unique filename
+        // Generate a unique filename and path by patient
         const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`
         const filename = `${uniqueSuffix}-${file.name.replace(/\s+/g, '-')}`
+        const path = `patients/${patientId}/${filename}`
 
         // Supabase S3 requires specifying the bucket name as part of the path or Bucket param.
         // It behaves like an AWS S3 bucket.
         const commaCommand = new PutObjectCommand({
             Bucket: bucket,
-            Key: filename,
+            Key: path,
             Body: buffer,
             ContentType: file.type,
         })
@@ -50,11 +52,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Failed to upload file to Supabase S3", details: error.message }, { status: 500 })
         }
 
-        // Get public URL using the Supabase URL format since S3 doesn't automatically return the public URL.
-        const projectId = (process.env.SUPABASE_S3_ENDPOINT || "https://ovfntwpehxejgwtcpifu.storage.supabase.co").split(".")[0].split("//")[1]
-        const publicUrl = `https://${projectId}.supabase.co/storage/v1/object/public/${bucket}/${filename}`
+        // Generate secure internal proxy URL instead of public URL
+        const proxyUrl = `/api/storage/${bucket}/${path}`
 
-        return NextResponse.json({ url: publicUrl, path: `${bucket}/${filename}` }, { status: 200 })
+        return NextResponse.json({ url: proxyUrl, path: `${bucket}/${path}` }, { status: 200 })
     } catch (error: any) {
         console.error("Upload API Error:", error)
         return NextResponse.json({

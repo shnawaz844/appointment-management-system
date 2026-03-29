@@ -2,14 +2,21 @@ import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 import { getAuthSession } from "@/lib/auth"
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await getAuthSession()
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
+        const { searchParams } = new URL(request.url)
+        const patientId = searchParams.get("patientId")
+
         let query = supabase.from("prescriptions").select("*").order("created_at", { ascending: false })
+
+        if (patientId) {
+            query = query.eq("patient_id", patientId)
+        }
 
         if (session.role === "DOCTOR") {
             query = query.ilike("doctor_name", session.name.trim())

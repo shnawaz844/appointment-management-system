@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, ClipboardList, User, Activity, FileText, ChevronRight, AlertCircle, Stethoscope } from "lucide-react"
+import { Loader2, ClipboardList, User, Activity, FileText, ChevronRight, AlertCircle, Stethoscope, Upload, X, FileIcon, ImageIcon } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
@@ -42,6 +42,9 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
     const [selectedDoctorName, setSelectedDoctorName] = useState("")
     const [status, setStatus] = useState("Active")
     const [summary, setSummary] = useState("")
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [filePreview, setFilePreview] = useState<string | null>(null)
+    const [uploading, setUploading] = useState(false)
 
     useEffect(() => {
         if (open) {
@@ -100,14 +103,60 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
         }
         setStatus("Active")
         setSummary("")
+        setSelectedFile(null)
+        setFilePreview(null)
+    }
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null
+        setSelectedFile(file)
+        if (file) {
+            if (file.type.startsWith("image/")) {
+                const reader = new FileReader()
+                reader.onloadend = () => setFilePreview(reader.result as string)
+                reader.readAsDataURL(file)
+            } else {
+                setFilePreview(null)
+            }
+        } else {
+            setFilePreview(null)
+        }
     }
 
     const handleSubmit = async () => {
         const patient = patients.find((p) => p.id === selectedPatientId)
-        if (!patient || !recordType || !selectedDoctorName || !summary) return
+        if (!patient || !recordType || !selectedDoctorName) return
+        if (!summary && !selectedFile) return
 
         setLoading(true)
+        setUploading(true)
         try {
+            let attachment_url = ""
+            let attachment_type = ""
+
+            if (selectedFile) {
+                const formData = new FormData()
+                formData.append("file", selectedFile)
+                formData.append("bucket", "uploads")
+                formData.append("patientId", patient.id || "anonymous")
+
+                const uploadRes = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData,
+                })
+
+                if (uploadRes.ok) {
+                    const uploadData = await uploadRes.json()
+                    attachment_url = uploadData.url
+                    attachment_type = selectedFile.type
+                } else {
+                    alert("Failed to upload attachment. Please try again.")
+                    setLoading(false)
+                    setUploading(false)
+                    return
+                }
+            }
+
             const res = await fetch("/api/medical-records", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -118,6 +167,8 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
                     doctor: selectedDoctorName,
                     status,
                     summary,
+                    attachment_url,
+                    attachment_type,
                     date: new Date().toISOString().split("T")[0],
                 }),
             })
@@ -131,6 +182,7 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
             console.error("Failed to create medical record:", error)
         } finally {
             setLoading(false)
+            setUploading(false)
         }
     }
 
@@ -184,7 +236,7 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
                                                 SELECT PATIENT <span className="text-rose-500">*</span>
                                             </Label>
                                             <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
-                                                <SelectTrigger id="patient" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all">
+                                                <SelectTrigger id="patient" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all">
                                                     <SelectValue placeholder="Select patient" />
                                                 </SelectTrigger>
                                                 <SelectContent className="rounded-2xl border-slate-200/60 dark:border-white/10 backdrop-blur-xl">
@@ -206,7 +258,7 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
                                                 onValueChange={setSelectedDoctorName}
                                                 disabled={currentUser?.role === "DOCTOR"}
                                             >
-                                                <SelectTrigger id="doctor" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all">
+                                                <SelectTrigger id="doctor" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all">
                                                     <SelectValue placeholder="Select doctor" />
                                                 </SelectTrigger>
                                                 <SelectContent className="rounded-2xl border-slate-200/60 dark:border-white/10 backdrop-blur-xl">
@@ -237,7 +289,7 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
                                         <div className="space-y-2.5">
                                             <Label htmlFor="recordType" className="text-xs font-bold text-slate-500 dark:text-slate-400">RECORD TYPE <span className="text-rose-500">*</span></Label>
                                             <Select value={recordType} onValueChange={setRecordType}>
-                                                <SelectTrigger id="recordType" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                                                <SelectTrigger id="recordType" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
                                                     <SelectValue placeholder="Select type" />
                                                 </SelectTrigger>
                                                 <SelectContent className="rounded-2xl backdrop-blur-xl">
@@ -251,7 +303,7 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
                                         <div className="space-y-2.5">
                                             <Label htmlFor="status" className="text-xs font-bold text-slate-500 dark:text-slate-400">STATUS <span className="text-rose-500">*</span></Label>
                                             <Select value={status} onValueChange={setStatus}>
-                                                <SelectTrigger id="status" className="h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
+                                                <SelectTrigger id="status" className="w-full h-12 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="rounded-2xl backdrop-blur-xl">
@@ -263,7 +315,7 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
                                     </div>
 
                                     <div className="mt-8 space-y-2.5">
-                                        <Label htmlFor="clinicalSummary" className="text-xs font-bold text-slate-500 dark:text-slate-400">CLINICAL SUMMARY <span className="text-rose-500">*</span></Label>
+                                        <Label htmlFor="clinicalSummary" className="text-xs font-bold text-slate-500 dark:text-slate-400">CLINICAL SUMMARY <span className="text-slate-400 font-normal">(Optional if file attached)</span></Label>
                                         <Textarea
                                             id="clinicalSummary"
                                             value={summary}
@@ -271,6 +323,58 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
                                             placeholder="Describe the patient condition, findings, and treatment plan..."
                                             className="min-h-[160px] rounded-3xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 focus:ring-[#e05d38]/20 focus:border-[#e05d38]/50 transition-all p-4 resize-none"
                                         />
+                                    </div>
+
+                                    <div className="mt-8 space-y-4">
+                                        <Label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Reports & Attachments</Label>
+                                        <div className="relative group/upload">
+                                            <Input
+                                                id="fileUpload"
+                                                type="file"
+                                                accept="image/*,.pdf"
+                                                onChange={handleFileChange}
+                                                className="h-14 rounded-2xl bg-white/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-white/5 cursor-pointer file:cursor-pointer p-[0.4rem] file:h-full file:border-0 file:bg-[#e05d38]/10 file:text-[#e05d38] file:rounded-xl file:px-4 file:mr-3 transition-all"
+                                            />
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 group-hover/upload:opacity-100 transition-opacity pointer-events-none">
+                                                <Upload className="w-5 h-5 text-[#e05d38]" />
+                                            </div>
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {selectedFile && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: 10 }}
+                                                    className="flex items-center gap-4 p-4 bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 rounded-3xl group/file"
+                                                >
+                                                    <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+                                                        {selectedFile.type.startsWith("image/") ? (
+                                                            <ImageIcon className="w-5 h-5 text-blue-500" />
+                                                        ) : (
+                                                            <FileIcon className="w-5 h-5 text-rose-500" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{selectedFile.name}</p>
+                                                        <p className="text-[10px] font-bold text-slate-400">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB • {selectedFile.type.split("/")[1].toUpperCase()}</p>
+                                                    </div>
+                                                    {filePreview && (
+                                                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200/60 dark:border-white/10 flex-shrink-0">
+                                                            <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+                                                        </div>
+                                                    )}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => { setSelectedFile(null); setFilePreview(null); }}
+                                                        className="rounded-full hover:bg-rose-500/10 hover:text-rose-500 transition-colors"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </Button>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 </div>
                             </motion.div>
@@ -287,13 +391,13 @@ export function CreateMedicalRecordDialog({ children, onCreated, preselectedPati
                             </Button>
                             <Button
                                 onClick={handleSubmit}
-                                disabled={loading || !selectedPatientId || !recordType || (currentUser?.role !== "DOCTOR" && !selectedDoctorName) || !summary}
-                                className="rounded-2xl h-12 px-8 font-extrabold bg-linear-to-r from-[#e05d38] to-[#e05d38] hover:from-[#e05d38] hover:to-[#e05d38] text-white shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)] hover:shadow-[0_15px_30px_-10px_rgba(37,99,235,0.5)] transition-all duration-300 flex items-center gap-2 min-w-[180px]"
+                                disabled={loading || !selectedPatientId || !recordType || (currentUser?.role !== "DOCTOR" && !selectedDoctorName) || (!summary && !selectedFile)}
+                                className="rounded-2xl h-12 px-8 font-extrabold bg-linear-to-r from-[#e05d38] to-[#e05d38] hover:from-[#e05d38] hover:to-[#e05d38] text-white shadow-[0_10px_20px_-10px_rgba(224,93,56,0.4)] hover:shadow-[0_15px_30px_-10px_rgba(224,93,56,0.5)] transition-all duration-300 flex items-center gap-2 min-w-[180px]"
                             >
                                 {loading ? (
                                     <div className="flex items-center gap-2">
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        <span>Processing...</span>
+                                        <span>{uploading ? "Uploading..." : "Processing..."}</span>
                                     </div>
                                 ) : (
                                     <>
