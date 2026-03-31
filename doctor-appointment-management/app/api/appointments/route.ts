@@ -43,6 +43,7 @@ export async function POST(request: Request) {
             type: body.type,
             status: body.status || "Scheduled",
             phone: body.phone,
+            unique_citizen_card_number: body.uniqueCitizenCardNumber || body.unique_citizen_card_number,
             notes: body.notes,
         }
 
@@ -77,6 +78,7 @@ export async function PUT(request: Request) {
         if (body.type) updateData.type = body.type
         if (body.status) updateData.status = body.status
         if (body.phone) updateData.phone = body.phone
+        if (body.uniqueCitizenCardNumber || body.unique_citizen_card_number) updateData.unique_citizen_card_number = body.uniqueCitizenCardNumber || body.unique_citizen_card_number
         if (body.notes !== undefined) updateData.notes = body.notes
 
         const { data, error } = await supabase

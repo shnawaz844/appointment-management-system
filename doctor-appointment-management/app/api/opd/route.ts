@@ -29,12 +29,12 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json()
-        const opdData = {
+        const opdData: any = {
             uhid_no: body.uhidNo || body.uhid_no,
             date: body.date,
             token_no: body.tokenNo || body.token_no,
             patient_name: body.patientName || body.patient_name,
-            age_sex: body.ageSex || body.age_sex,
+            age_sex: body.age && body.sex ? `${body.age} / ${body.sex}` : (body.ageSex || body.age_sex),
             opd_no: body.opdNo || body.opd_no,
             guardian_name: body.guardianName || body.guardian_name,
             mobile_no: body.mobileNo || body.mobile_no,
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
             consultant: body.consultant,
             address: body.address,
             patient_type: body.patientType || body.patient_type,
+            unique_citizen_card_number: body.uniqueCitizenCardNumber || body.unique_citizen_card_number,
             created_by: session.id,
         }
 

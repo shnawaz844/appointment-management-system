@@ -11,10 +11,13 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url)
         const fetchAll = searchParams.get("all") === "true"
+        const cardNo = searchParams.get("unique_citizen_card_number")
 
         let query = supabase.from("patients").select("*").order("created_at", { ascending: false })
 
-        if (session.role === "DOCTOR" && !fetchAll) {
+        if (cardNo) {
+            query = query.eq("unique_citizen_card_number", cardNo)
+        } else if (session.role === "DOCTOR" && !fetchAll) {
             query = query.ilike("doctor", session.name.trim())
         }
 
@@ -82,6 +85,7 @@ export async function POST(request: Request) {
             physical_therapy: body.physicalTherapy ?? body.physical_therapy,
             address: body.address,
             guardian_name: body.guardianName || body.guardian_name,
+            unique_citizen_card_number: body.uniqueCitizenCardNumber || body.unique_citizen_card_number,
             created_by: session.id,
         }
 

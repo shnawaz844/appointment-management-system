@@ -162,10 +162,10 @@ export default function AppointmentsPage() {
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     if (activeTab === "today" && a.date !== today) match = false
-    
+
     // Online filtering logic (for non-dummy items)
     if (activeTab === "online" && (a.type !== "Online" || a.date !== today)) match = false
-    
+
     if (activeTab === "allOnline" && a.type !== "Online") match = false
 
     if (filterDate && a.date !== filterDate) match = false
@@ -456,7 +456,7 @@ export default function AppointmentsPage() {
                     <TableRow className="hover:bg-transparent border-slate-200/50 dark:border-slate-800/50">
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12 w-10">S.no</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Patient Name</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">OPD NO</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">OPD NO / UCCN NO</TableHead>
                       {activeTab !== "today" && activeTab !== "online" && (
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Date</TableHead>
                       )}
@@ -538,7 +538,7 @@ export default function AppointmentsPage() {
                           <TableCell className="text-right py-4">
                             <div className="flex items-center justify-end gap-1.5">
                               {user && user.role !== "STAFF" && (
-                                <CreatePrescriptionDialog preselectedPatientId={apt.patient_id}>
+                                <CreatePrescriptionDialog preselectedPatientId={apt.patient_id} appointmentId={apt.id || apt._id}>
                                   <Button variant="outline" size="sm" className="h-7 px-2.5 rounded-lg border-blue-200 dark:border-blue-800 text-blue-600 hover:bg-blue-600 hover:text-white transition-all font-bold text-[10px] uppercase tracking-widest" title="Prescribe">
                                     Rx
                                   </Button>

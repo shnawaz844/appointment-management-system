@@ -287,7 +287,7 @@ export default function OPDListPage() {
                         <TableHead>Token No</TableHead>
                         <TableHead>Patient Name</TableHead>
                         <TableHead>Age/Sex</TableHead>
-                        <TableHead>Phone</TableHead>
+                        <TableHead>Phone / UCCN</TableHead>
                         <TableHead>Consultant</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Valid Upto</TableHead>
@@ -308,7 +308,13 @@ export default function OPDListPage() {
                               <TableCell>{opd.token_no}</TableCell>
                               <TableCell className="font-medium">{opd.patient_name}</TableCell>
                               <TableCell className="text-muted-foreground">{opd.age_sex}</TableCell>
-                              <TableCell className="text-muted-foreground">{opd.mobile_no}</TableCell>
+                              <TableCell className="text-muted-foreground font-medium">
+                                {opd.unique_citizen_card_number ? (
+                                  <span className="text-blue-600 dark:text-blue-400">{opd.unique_citizen_card_number}</span>
+                                ) : (
+                                  opd.mobile_no
+                                )}
+                              </TableCell>
                               <TableCell>
                                 <div className="flex flex-col">
                                   <span className="font-medium text-sm">{opd.consultant}</span>

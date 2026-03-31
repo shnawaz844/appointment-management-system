@@ -118,6 +118,14 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
     {} as Record<string, any[]>,
   )
 
+  // Separate uploaded prescription files from general medical records
+  const uploadedPrescriptions = patientMedicalRecords.filter(r => 
+    r.record_type === "Prescription" || r.summary?.includes("(Prescription)")
+  )
+  const filteredMedicalRecords = patientMedicalRecords.filter(r => 
+    r.record_type !== "Prescription" && !r.summary?.includes("(Prescription)")
+  )
+
   return (
     <main className="flex-1 min-h-screen overflow-x-hidden overflow-y-auto">
       <div className="container mx-auto py-6 md:py-8 px-4 md:px-8">
@@ -204,13 +212,23 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex items-start gap-3">
-                    <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                      <p className="text-base font-medium text-foreground">{patient.phone}</p>
+                  {patient.unique_citizen_card_number ? (
+                    <div className="flex items-start gap-3">
+                      <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Unique Citizen Card Number</p>
+                        <p className="text-base font-bold text-blue-600 dark:text-blue-400">{patient.unique_citizen_card_number}</p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex items-start gap-3">
+                      <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                        <p className="text-base font-medium text-foreground">{patient.phone}</p>
+                      </div>
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex items-start gap-3">
                     <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
@@ -329,9 +347,9 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                 </CreateMedicalRecordDialog>
               </CardHeader>
               <CardContent className="space-y-6 px-4 md:px-8">
-                {patientMedicalRecords.length > 0 ? (
+                {filteredMedicalRecords.length > 0 ? (
                   <div className="space-y-3">
-                    {patientMedicalRecords.map((record: any) => (
+                    {filteredMedicalRecords.map((record: any) => (
                       <div
                         key={record.id}
                         className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 transition-all gap-4"
@@ -341,7 +359,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                             <FileText className="h-7 w-7 text-blue-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">{record.record_type}</p>
+                            <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">{record.record_type === 'Progress Notes' ? 'Medical Report' : record.record_type}</p>
                             <div className="flex items-center gap-2 mt-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                               <span>{record.date}</span>
                               <span className="w-1 h-1 rounded-full bg-slate-300" />
@@ -495,9 +513,62 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                    <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl mb-8">
                       <Pill className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                      <p className="text-sm font-bold opacity-50 uppercase tracking-widest">No prescriptions found</p>
+                      <p className="text-sm font-bold opacity-50 uppercase tracking-widest">No clinical prescriptions found</p>
+                    </div>
+                  )}
+
+                  {/* Uploaded Prescription Files Section */}
+                  {uploadedPrescriptions.length > 0 && (
+                    <div className="mt-12 space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-[#e05d38]/10 flex items-center justify-center">
+                          <FileText className="h-4 w-4 text-[#e05d38]" />
+                        </div>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Uploaded Prescription Files</h3>
+                      </div>
+                      
+                      <div className="grid gap-4">
+                        {uploadedPrescriptions.map((record: any) => (
+                          <div
+                            key={record.id}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 transition-all gap-4 shadow-sm"
+                          >
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                                <FileImage className="h-6 w-6 text-blue-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">Patient Uploaded Prescription</p>
+                                <div className="flex items-center gap-2 mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                  <span>{record.date}</span>
+                                  <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                  <span>Dr. {record.doctor}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {record.attachment_url && (
+                                <a
+                                  href={record.attachment_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="h-9 px-4 flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest"
+                                >
+                                  View File
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
+                              <DeleteReportDialog reportId={record.id} reportType="Prescription">
+                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-red-500 hover:bg-red-50 transition-all">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </DeleteReportDialog>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

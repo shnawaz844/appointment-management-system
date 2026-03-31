@@ -33,9 +33,10 @@ interface CreatePrescriptionDialogProps {
   children: React.ReactNode
   onCreated?: () => void
   preselectedPatientId?: string
+  appointmentId?: string
 }
 
-export function CreatePrescriptionDialog({ children, onCreated, preselectedPatientId }: CreatePrescriptionDialogProps) {
+export function CreatePrescriptionDialog({ children, onCreated, preselectedPatientId, appointmentId }: CreatePrescriptionDialogProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -195,6 +196,7 @@ export function CreatePrescriptionDialog({ children, onCreated, preselectedPatie
           status,
           duration,
           instructions,
+          appointmentId: appointmentId
         }),
       })
       if (res.ok) {

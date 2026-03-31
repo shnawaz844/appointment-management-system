@@ -39,6 +39,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json()
+        const { appointmentId } = body
         const rxData = {
             id: body.id || `RX-${Math.floor(10000 + Math.random() * 90000)}`,
             patient_name: body.patientName || body.patient_name,
@@ -54,6 +55,18 @@ export async function POST(request: Request) {
 
         const { data, error } = await supabase.from("prescriptions").insert(rxData).select().single()
         if (error) throw error
+
+        if (appointmentId) {
+            const { error: updateError } = await supabase
+                .from("appointments")
+                .update({ prescription_id: data.id })
+                .eq("id", appointmentId)
+            
+            if (updateError) {
+                console.error("Failed to link prescription to appointment:", updateError)
+            }
+        }
+
         return NextResponse.json(data, { status: 201 })
     } catch (error) {
         console.error("Failed to create prescription:", error)

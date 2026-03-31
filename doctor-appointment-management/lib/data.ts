@@ -17,6 +17,7 @@ export interface Patient {
   physicalTherapy?: boolean
   address?: string
   guardianName?: string
+  unique_citizen_card_number?: string
 }
 
 export interface Report {

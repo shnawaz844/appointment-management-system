@@ -25,7 +25,8 @@ export default function OPDPage() {
         date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
         tokenNo: "",
         patientName: "",
-        ageSex: "",
+        age: "",
+        sex: "",
         opdNo: "",
         guardianName: "",
         mobileNo: "",
@@ -33,12 +34,14 @@ export default function OPDPage() {
         consultant: "",
         address: "",
         patientType: "",
+        uniqueCitizenCardNumber: "",
     })
 
     const [patients, setPatients] = useState<any[]>([])
     const [doctors, setDoctors] = useState<any[]>([])
     const [specialties, setSpecialties] = useState<any[]>([])
     const [isSaving, setIsSaving] = useState(false)
+    const [isSearchingCard, setIsSearchingCard] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [openPatient, setOpenPatient] = useState(false)
     const [openConsultant, setOpenConsultant] = useState(false)
@@ -93,6 +96,41 @@ export default function OPDPage() {
         fetchInitialData()
     }, [])
 
+    // Autofill patient details when Unique Citizen Card No is entered
+    useEffect(() => {
+        const cardNo = formData.uniqueCitizenCardNumber?.trim()
+        if (!cardNo || cardNo.length < 3) return
+
+        const delayDebounceFn = setTimeout(async () => {
+            // Check if we already have this patient in the local 'patients' state
+            const localMatch = patients.find(p => p.unique_citizen_card_number === cardNo)
+            if (localMatch) {
+                handlePatientSelect(localMatch)
+                toast.success("Details filled from local records")
+                return
+            }
+
+            // Fetch from database if not found locally
+            try {
+                setIsSearchingCard(true)
+                const res = await fetch(`/api/patients?unique_citizen_card_number=${encodeURIComponent(cardNo)}`)
+                if (res.ok) {
+                    const data = await res.json()
+                    if (Array.isArray(data) && data.length > 0) {
+                        toast.success("Patient details fetched from database!")
+                        handlePatientSelect(data[0])
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching patient by card number:", error)
+            } finally {
+                setIsSearchingCard(false)
+            }
+        }, 1000) // 1 second debounce
+
+        return () => clearTimeout(delayDebounceFn)
+    }, [formData.uniqueCitizenCardNumber])
+
     const validateForm = () => {
         const newErrors: Record<string, string> = {}
 
@@ -107,14 +145,12 @@ export default function OPDPage() {
             }
         }
 
-        if (!formData.ageSex?.trim()) {
-            newErrors.ageSex = "Age / Sex is required"
-        } else if (!formData.ageSex.includes('/')) {
-            newErrors.ageSex = "Format must be: Age / Gender"
-        }
+        if (!formData.age?.trim()) newErrors.age = "Age is required"
+        if (!formData.sex?.trim()) newErrors.sex = "Sex is required"
 
         if (!formData.consultant?.trim()) newErrors.consultant = "Consultant is required"
         if (!formData.address?.trim()) newErrors.address = "Address is required"
+        // Unique Citizen Card Number is optional, no validation required
 
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
@@ -175,8 +211,8 @@ export default function OPDPage() {
                 const newPatientPayload = {
                     id: finalUhid,
                     name: formData.patientName,
-                    age: parseInt(formData.ageSex.split('/')[0].trim()) || 0,
-                    gender: formData.ageSex.split('/')[1]?.trim() || "Others",
+                    age: parseInt(formData.age) || 0,
+                    gender: formData.sex || "Others",
                     phone: formData.mobileNo,
                     diagnosis: "OPD Consultation",
                     doctor: formData.consultant,
@@ -186,6 +222,7 @@ export default function OPDPage() {
                     month: months[now.getMonth()],
                     address: formData.address,
                     guardianName: formData.guardianName,
+                    unique_citizen_card_number: formData.uniqueCitizenCardNumber,
                 }
 
                 console.log("Creating new patient:", newPatientPayload)
@@ -242,6 +279,7 @@ export default function OPDPage() {
                     type: "OPD",
                     status: "Scheduled",
                     phone: formData.mobileNo,
+                    unique_citizen_card_number: formData.uniqueCitizenCardNumber,
                 }
 
                 console.log("Booking appointment:", appointmentPayload)
@@ -272,7 +310,7 @@ export default function OPDPage() {
         }
     }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target
         setFormData((prev) => ({ ...prev, [name]: value }))
         // Clear error when user types
@@ -290,11 +328,13 @@ export default function OPDPage() {
             ...prev,
             patientName: patient.name,
             uhidNo: "", // Keep empty on selection as per user request
-            ageSex: `${patient.age} / ${patient.gender}`,
+            age: patient.age.toString(),
+            sex: patient.gender || "Others",
             mobileNo: patient.phone || prev.mobileNo,
             address: patient.address || prev.address,
             guardianName: patient.guardianName || prev.guardianName,
             consultant: patient.doctor || prev.consultant,
+            uniqueCitizenCardNumber: patient.unique_citizen_card_number || prev.uniqueCitizenCardNumber,
         }))
         setOpenPatient(false)
     }
@@ -331,7 +371,15 @@ export default function OPDPage() {
 
             {/* Input Form UI (Visible on screen) */}
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-3xl md:rounded-4xl p-4 sm:p-8 no-print">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div className="relative">
+                        <InputFormGroup label="Unique Citizen Card No" name="uniqueCitizenCardNumber" value={formData.uniqueCitizenCardNumber} onChange={handleChange} error={errors.uniqueCitizenCardNumber} />
+                        {isSearchingCard && (
+                            <div className="absolute right-3 top-10">
+                                <Activity className="h-4 w-4 animate-spin text-primary" />
+                            </div>
+                        )}
+                    </div>
                     <InputFormGroup label="UHID No." name="uhidNo" value={formData.uhidNo} onChange={handleChange} error={errors.uhidNo} />
                     <InputFormGroup label="Date" name="date" value={formData.date} onChange={handleChange} error={errors.date} />
                     <InputFormGroup label="Token No." name="tokenNo" value={formData.tokenNo} onChange={handleChange} error={errors.tokenNo} />
@@ -404,13 +452,22 @@ export default function OPDPage() {
                         </Popover>
                     </div>
 
-                    <InputFormGroup label="Age / Sex" name="ageSex" value={formData.ageSex} onChange={handleChange} error={errors.ageSex} />
+                    <div className="flex gap-4 flex-1 items-start">
+                        <div className="w-[80px] md:w-[100px]">
+                            <InputFormGroup label="Age" name="age" value={formData.age} onChange={handleChange} error={errors.age} />
+                        </div>
+                        <div className="flex-1">
+                            <SelectFormGroup label="Sex" name="sex" value={formData.sex} onChange={handleChange} options={["male", "female", "Others"]} error={errors.sex} />
+                        </div>
+                    </div>
                     <InputFormGroup label="OPD No." name="opdNo" value={formData.opdNo} onChange={handleChange} error={errors.opdNo} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <InputFormGroup label="Guardian Name (S/O, W/O, D/O)" name="guardianName" value={formData.guardianName} onChange={handleChange} error={errors.guardianName} />
                     <InputFormGroup label="Mobile No." name="mobileNo" value={formData.mobileNo} onChange={handleChange} error={errors.mobileNo} />
-                    <InputFormGroup label="Valid Upto" name="validUpto" value={formData.validUpto} onChange={handleChange} error={errors.validUpto} />
+                    {!formData.uniqueCitizenCardNumber && (
+                        <InputFormGroup label="Valid Upto" name="validUpto" value={formData.validUpto} onChange={handleChange} error={errors.validUpto} />
+                    )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     {/* Dynamic Consultant Selection */}
@@ -496,6 +553,16 @@ export default function OPDPage() {
                             </div>
                         </div>
 
+                        {/* Row 1.5 Custom Card Number */}
+                        {formData.uniqueCitizenCardNumber && (
+                            <div className="grid grid-cols-12 leading-relaxed">
+                                <div className="col-span-12 flex items-baseline">
+                                    <span className="text-[9.5pt] font-black w-[48.5mm]">Unique Citizen Card No.</span>
+                                    <span className="text-[9.5pt] font-black">: {formData.uniqueCitizenCardNumber}</span>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Row 2 */}
                         <div className="grid grid-cols-12 leading-relaxed">
                             <div className="col-span-4 flex items-baseline">
@@ -504,7 +571,7 @@ export default function OPDPage() {
                             </div>
                             <div className="col-span-4 flex items-baseline ml-12">
                                 <span className="text-[9.5pt] font-black w-[22mm]">Age / Sex</span>
-                                <span className="text-[9.5pt] font-black">: {formData.ageSex}</span>
+                                <span className="text-[9.5pt] font-black">: {formData.age} / {formData.sex}</span>
                             </div>
                             <div className="col-span-4 flex items-baseline ml-12">
                                 <span className="text-[9.5pt] font-black w-[24mm]">OPD No.</span>
@@ -524,7 +591,7 @@ export default function OPDPage() {
                             </div>
                             <div className="col-span-4 flex items-baseline ml-12">
                                 <span className="text-[9.5pt] font-black w-[24mm]">Valid Upto</span>
-                                <span className="text-[9.5pt] font-black">: {formData.validUpto}</span>
+                                <span className="text-[9.5pt] font-black">: {!formData.uniqueCitizenCardNumber ? formData.validUpto : "N/A"}</span>
                             </div>
                         </div>
 
@@ -656,6 +723,48 @@ function FormField({
                     />
                 </div>
             </div>
+        </div>
+    )
+}
+
+function SelectFormGroup({
+    label,
+    name,
+    value,
+    onChange,
+    options,
+    error
+}: {
+    label: string,
+    name: string,
+    value: string,
+    onChange: (e: any) => void,
+    options: string[],
+    error?: string
+}) {
+    return (
+        <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">{label}</label>
+            <div className="relative">
+                <select
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    className={cn(
+                        "w-full bg-white/50 dark:bg-slate-900/50 border rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 outline-none transition-all shadow-sm dark:text-foreground appearance-none",
+                        error ? "border-red-500 focus:ring-red-500/20" : "border-slate-200 dark:border-slate-800 focus:ring-primary/20 focus:border-primary"
+                    )}
+                >
+                    <option value="" disabled>Select</option>
+                    {options.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                </div>
+            </div>
+            {error && <p className="text-[10px] font-bold text-red-500 ml-1 mt-1 uppercase tracking-wider">{error}</p>}
         </div>
     )
 }

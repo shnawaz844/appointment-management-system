@@ -64,7 +64,9 @@ export function ImagingStudies({ studies = [] }: ImagingStudiesProps) {
 
                 <div className="px-1">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-600 transition-colors uppercase tracking-tight text-sm">{study.study_type}</p>
+                    <p className="font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-600 transition-colors uppercase tracking-tight text-sm">
+                      {study.study_type === 'X-ray' && study.modality === 'Other' ? 'Image from PGF app' : study.study_type}
+                    </p>
                     <div className="w-1.5 h-1.5 bg-blue-500 rounded-full group-hover:animate-pulse" />
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 mb-4">
@@ -133,7 +135,7 @@ export function ImagingStudies({ studies = [] }: ImagingStudiesProps) {
                           </div>
                           <div>
                             <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                              {selectedImage.study_type}
+                              {selectedImage.study_type === 'X-ray' && selectedImage.modality === 'Other' ? 'Image from PGF app' : selectedImage.study_type}
                             </DialogTitle>
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">

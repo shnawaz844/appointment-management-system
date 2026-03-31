@@ -181,7 +181,7 @@ export default function PatientsPage() {
                         <TableHead>Name</TableHead>
                         <TableHead>Age</TableHead>
                         <TableHead>Gender</TableHead>
-                        <TableHead>Phone</TableHead>
+                        <TableHead>Phone / UCCN</TableHead>
                         <TableHead>Diagnosis</TableHead>
                         <TableHead>Doctor</TableHead>
                         <TableHead>Last Visit</TableHead>
@@ -197,7 +197,13 @@ export default function PatientsPage() {
                             <TableCell className="font-medium">{patient.name}</TableCell>
                             <TableCell>{patient.age}</TableCell>
                             <TableCell className="text-muted-foreground">{patient.gender}</TableCell>
-                            <TableCell className="text-muted-foreground">{patient.phone}</TableCell>
+                            <TableCell className="text-muted-foreground font-medium">
+                              {patient.unique_citizen_card_number ? (
+                                <span className="text-blue-600 dark:text-blue-400">{patient.unique_citizen_card_number}</span>
+                              ) : (
+                                patient.phone
+                              )}
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline" className={cn("px-2.5 py-0.5 font-semibold", getDiagnosisColor(patient.diagnosis))}>
                                 {patient.diagnosis || "N/A"}
