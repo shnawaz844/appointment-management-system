@@ -465,7 +465,7 @@ export default function OPDPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <InputFormGroup label="Guardian Name (S/O, W/O, D/O)" name="guardianName" value={formData.guardianName} onChange={handleChange} error={errors.guardianName} />
                     <InputFormGroup label="Mobile No." name="mobileNo" value={formData.mobileNo} onChange={handleChange} error={errors.mobileNo} />
-                    {!formData.uniqueCitizenCardNumber && (
+                    {(!formData.uniqueCitizenCardNumber && formData.patientType !== "Online Client") && (
                         <InputFormGroup label="Valid Upto" name="validUpto" value={formData.validUpto} onChange={handleChange} error={errors.validUpto} />
                     )}
                 </div>
@@ -591,7 +591,7 @@ export default function OPDPage() {
                             </div>
                             <div className="col-span-4 flex items-baseline ml-12">
                                 <span className="text-[9.5pt] font-black w-[24mm]">Valid Upto</span>
-                                <span className="text-[9.5pt] font-black">: {!formData.uniqueCitizenCardNumber ? formData.validUpto : "N/A"}</span>
+                                <span className="text-[9.5pt] font-black">: {(!formData.uniqueCitizenCardNumber && formData.patientType !== "Online Client") ? formData.validUpto : "Null"}</span>
                             </div>
                         </div>
 

@@ -15,7 +15,7 @@ export default function DoctorsPage() {
     const [specialties, setSpecialties] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
-    const [formData, setFormData] = useState({ name: "", specialty: "", phone: "", email: "", password: "" })
+    const [formData, setFormData] = useState({ name: "", specialty: "", phone: "", email: "", password: "", image: "" })
 
     const fetchData = async () => {
         try {
@@ -63,11 +63,12 @@ export default function DoctorsPage() {
                     specialty_id: specId,
                     phone: formData.phone,
                     email: formData.email,
-                    password: formData.password
+                    password: formData.password,
+                    image: formData.image
                 }),
             })
             if (res.ok) {
-                setFormData({ name: "", specialty: "", phone: "", email: "", password: "" })
+                setFormData({ name: "", specialty: "", phone: "", email: "", password: "", image: "" })
                 fetchData()
             }
         } catch (error) {
@@ -142,6 +143,15 @@ export default function DoctorsPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
+                                    <Label htmlFor="image">Doctor Image URL</Label>
+                                    <Input
+                                        id="image"
+                                        value={formData.image}
+                                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                        placeholder="https://example.com/doctor.jpg"
+                                    />
+                                </div>
+                                <div className="space-y-2">
                                     <Label htmlFor="password">Login Password *</Label>
                                     <Input
                                         id="password"
@@ -178,10 +188,21 @@ export default function DoctorsPage() {
                                         ) : (
                                             doctors.map((d) => (
                                                 <div key={d.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                                    <div>
-                                                        <p className="font-medium">{d.name}</p>
-                                                        <p className="text-xs text-primary font-semibold">{getspecialtyName(d.specialty_id)}</p>
-                                                        <p className="text-xs text-muted-foreground">{d.email || d.phone || "No contact info"}</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-10 w-10 rounded-full overflow-hidden bg-muted shrink-0">
+                                                            {d.image ? (
+                                                                <img src={d.image} alt={d.name} className="h-full w-full object-cover" />
+                                                            ) : (
+                                                                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold">
+                                                                    {d.name.charAt(0)}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium">{d.name}</p>
+                                                            <p className="text-xs text-primary font-semibold">{getspecialtyName(d.specialty_id)}</p>
+                                                            <p className="text-xs text-muted-foreground">{d.email || d.phone || "No contact info"}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))

@@ -9,7 +9,9 @@ export async function GET(request: Request) {
 
         let query = supabase.from("opd").select("*").order("created_at", { ascending: false })
         if (dateFilter) {
-            query = query.eq("date", dateFilter)
+            // Flexible filtering: match both "01 Apr 2026" and older "01/Apr/2026" formats
+            const alternateFilter = dateFilter.replace(/ /g, '/')
+            query = query.or(`date.eq."${dateFilter}",date.eq."${alternateFilter}"`)
         }
 
         const { data, error } = await query

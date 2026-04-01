@@ -48,7 +48,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
 
   // Fetch doctor's specialty based on patient.doctor or patient.diagnosis
   let doctorSpecialty = "General"
-  
+
   if (patient?.doctor || patient?.diagnosis) {
     // 1. Try to find the doctor in the doctors table
     if (patient.doctor) {
@@ -77,7 +77,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
   // Imaging specialty mapping
   const getImagingDescription = (specialty: any) => {
     const s = (typeof specialty === 'string' ? specialty : specialty?.name || "").toLowerCase().trim();
-    
+
     if (s.includes("cardio")) return "Echocardiogram, Stress Test, ECG, and Cardiac MRI"
     if (s.includes("neuro")) return "Brain MRI, CT Head, EEG, and Nerve Conduction Studies"
     if (s.includes("ortho")) return "X-rays, Joint MRI, Bone CT scan, and Arthroscopy"
@@ -85,7 +85,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
     if (s.includes("dental") || s.includes("dentist")) return "Dental X-rays, OPG, and CBCT"
     if (s.includes("physio") || s.includes("rehab")) return "Functional Assessment, Gait Analysis, and Range of Motion Testing"
     if (s.includes("chest") || s.includes("pulmono")) return "Chest X-ray, CT Thorax, and Lung Ultrasound"
-    
+
     return "X-rays, CT scans, MRI, and ultrasound imaging"
   }
 
@@ -119,10 +119,10 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
   )
 
   // Separate uploaded prescription files from general medical records
-  const uploadedPrescriptions = patientMedicalRecords.filter(r => 
+  const uploadedPrescriptions = patientMedicalRecords.filter(r =>
     r.record_type === "Prescription" || r.summary?.includes("(Prescription)")
   )
-  const filteredMedicalRecords = patientMedicalRecords.filter(r => 
+  const filteredMedicalRecords = patientMedicalRecords.filter(r =>
     r.record_type !== "Prescription" && !r.summary?.includes("(Prescription)")
   )
 
@@ -262,6 +262,29 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                     <p className="text-sm font-medium text-muted-foreground mb-2">Last Visit</p>
                     <p className="text-base font-medium text-foreground">{patient.last_visit}</p>
                   </div>
+                  {patientAppointments[0]?.notes && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-sm font-medium mb-2 text-[#e05d38]">Appointment Notes</p>
+                        {(() => {
+                          const notes = patientAppointments[0].notes;
+                          const match = notes.match(/^(\[.*?\])\s*(.*)$/);
+                          if (match) {
+                            return (
+                              <div className="space-y-1">
+                                <p className="text-base font-bold text-foreground leading-tight">{match[2]}</p>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-slate-100 dark:bg-slate-900 w-fit px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800">
+                                  {match[1]}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return <p className="text-base font-medium text-foreground italic">"{notes}"</p>;
+                        })()}
+                      </div>
+                    </>
+                  )}
                   <Separator />
                   {/* <div>
                     <p className="text-sm font-medium text-muted-foreground mb-2">Known Allergies</p>
@@ -528,7 +551,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                         </div>
                         <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Uploaded Prescription Files</h3>
                       </div>
-                      
+
                       <div className="grid gap-4">
                         {uploadedPrescriptions.map((record: any) => (
                           <div

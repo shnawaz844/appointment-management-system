@@ -26,9 +26,11 @@ export default function OPDListPage() {
   const [user, setUser] = useState<any>(null)
 
   /** Today's date formatted exactly as the OPD form stores it: "26 Mar 2026" */
-  const todayFormatted = new Date().toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric'
-  })
+  const todayFormatted = (() => {
+    const now = new Date()
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    return `${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()}`
+  })()
 
   const fetchOpds = async (tab: "today" | "all") => {
     setLoading(true)
@@ -75,7 +77,9 @@ export default function OPDListPage() {
    */
   const parseOpdDate = (dateStr: string): Date | null => {
     if (!dateStr) return null
-    const d = new Date(dateStr)
+    // Standardize to spaces before parsing
+    const normalized = dateStr.replace(/\//g, ' ')
+    const d = new Date(normalized)
     return isNaN(d.getTime()) ? null : d
   }
 
@@ -329,7 +333,9 @@ export default function OPDListPage() {
                                   {opd.date}
                                 </div>
                               </TableCell>
-                              <TableCell className="text-muted-foreground">{opd.valid_upto}</TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {(opd.unique_citizen_card_number || opd.patient_type === "Online Client") ? "Null" : opd.valid_upto}
+                              </TableCell>
                               {user?.role === "DOCTOR" && (
                                 <TableCell className="text-center">
                                   <Button

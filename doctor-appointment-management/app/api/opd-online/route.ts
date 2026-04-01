@@ -24,6 +24,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json()
+        console.log("[POST /api/opd-online] Received body:", JSON.stringify(body, null, 2))
         const {
             patientName,
             citizenId, // Unique Citizen Card Number
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
             medicalReports = [], // Array of URLs
             prescriptions = [], // Array of URLs
             imaging = [], // Array of URLs
+            appointmentType, // Optional, defaults to "OPD"
         } = body
 
         if (!patientName || !date || !time || !citizenId) {
@@ -121,19 +123,29 @@ export async function POST(request: Request) {
                     unique_citizen_card_number: citizenId,
                     diagnosis: "Online OPD Booking",
                     doctor: consultantName,
-                    report_type: "OPD", // <--- Fixed: Provide mandatory report_type field
+                    report_type: "OPD",
                     last_visit: date,
                     year: now.getFullYear().toString(),
                     month: months[now.getMonth()],
                 })
 
                 if (pError) throw pError
+                console.log("[POST /api/opd-online] Created patient:", finalUhid)
             }
         }
 
         // 2. ── OPD SYNC ──────────────────────────────────────────────────────
-        // Generate OPD sequence for today
-        const startOfDay = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).toISOString()
+        // Force IST (UTC+5:30) today date for server-side token sequence logic
+        const nowUTC = new Date()
+        const istMills = nowUTC.getTime() + (5.5 * 3600000)
+        const istDateObj = new Date(istMills)
+        
+        // Start of IST Day in ISO format for DB query
+        const istYear = istDateObj.getUTCFullYear()
+        const istMonth = String(istDateObj.getUTCMonth() + 1).padStart(2, '0')
+        const istDay = String(istDateObj.getUTCDate()).padStart(2, '0')
+        const startOfDay = `${istYear}-${istMonth}-${istDay}T00:00:00.000Z`
+        
         const { count } = await supabase
             .from("opd")
             .select("*", { count: "exact", head: true })
@@ -144,20 +156,32 @@ export async function POST(request: Request) {
         const visitCode = `P${Math.floor(1000 + Math.random() * 9000).toString()}`
         const opdNo = `${visitCode}-${formattedSeq}`
 
-        const validDate = new Date(date)
-        validDate.setDate(validDate.getDate() + 5) // valid for 5 days
-        const formatDate = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        // Safe date formatter for YYYY-MM-DD input
+        const safeFormatDate = (dateStr: string) => {
+            const [y, m, d] = dateStr.split('-');
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return `${d} ${months[parseInt(m) - 1]} ${y}`;
+        };
+
+        // validDate calculation for printed slip (5 days from the provided appointment date)
+        const [y, m, d] = date.split('-').map(Number);
+        // Create date at noon UTC to avoid edge-of-day shifts during calculation
+        const apptDateUTC = new Date(Date.UTC(y, m - 1, d, 12, 0, 0)); 
+        const validDateUTC = new Date(apptDateUTC.getTime() + (5 * 24 * 60 * 60 * 1000));
+        const formatDateForUpto = (d: Date) => d.getUTCDate().toString().padStart(2, '0') + ' ' + 
+                                               ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()] + ' ' + 
+                                               d.getUTCFullYear();
 
         const opdData = {
             uhid_no: finalUhid,
-            date: formatDate(new Date(date)),
+            date: safeFormatDate(date),
             token_no: formattedSeq,
             patient_name: patientName,
             age_sex: `${age || "0"} / ${gender || "Others"}`,
             opd_no: opdNo,
             guardian_name: guardianName || "",
             mobile_no: phone,
-            valid_upto: formatDate(validDate),
+            valid_upto: formatDateForUpto(validDateUTC),
             consultant: consultantName,
             address: address || "PGF Area",
             patient_type: "Online Client",
@@ -166,6 +190,7 @@ export async function POST(request: Request) {
 
         const { error: oError } = await supabase.from("opd").insert(opdData)
         if (oError) throw oError
+        console.log("[POST /api/opd-online] Created OPD record:", opdNo)
 
         // 3. ── APPOINTMENT SYNC ──────────────────────────────────────────────
         const apptId = `APT-${Math.floor(10000 + Math.random() * 90000)}`
@@ -178,10 +203,10 @@ export async function POST(request: Request) {
             time,
             doctor: consultantName,
             specialty: specialtyName,
-            type: "OPD",
+            type: appointmentType || "OPD",
             status: "Scheduled",
             phone: phone || null,
-            notes: notes ? `[Online Booking] ${notes}` : "[Online Booking]",
+            notes: notes ? `[Booked From PGF APP] ${notes}` : "[Booked From PGF APP]",
         }
 
         const { data: finalAppt, error: aError } = await supabase
@@ -191,6 +216,7 @@ export async function POST(request: Request) {
             .single()
 
         if (aError) throw aError
+        console.log("[POST /api/opd-online] Created appointment:", finalAppt?.id || apptId)
 
         // 4. ── PROCESS DOCUMENTS ─────────────────────────────────────────────
         // Medical Reports (and Prescriptions stored as Medical Records)
@@ -265,7 +291,11 @@ export async function POST(request: Request) {
     } catch (error: any) {
         console.error("[POST /api/opd-online] Error:", error)
         return NextResponse.json(
-            { error: "Booking Failed", details: error?.message },
+            { 
+                error: "Booking Failed", 
+                message: error?.message || "Internal Server Error",
+                details: error?.details || error?.hint || "Database constraint violation"
+            },
             { status: 500 }
         )
     }

@@ -27,7 +27,7 @@ export async function GET() {
 export async function POST(req: Request) {
     try {
         const body = await req.json()
-        const { name, specialtyId, specialty_id, phone, email, password } = body
+        const { name, specialtyId, specialty_id, phone, email, password, image } = body
 
         if (!name || !(specialtyId || specialty_id)) {
             return NextResponse.json({ error: "Name and Specialty are required" }, { status: 400 })
@@ -54,6 +54,7 @@ export async function POST(req: Request) {
             specialty_id: specialtyId || specialty_id,
             phone,
             email,
+            image,
         }).select().single()
 
         if (error) throw error

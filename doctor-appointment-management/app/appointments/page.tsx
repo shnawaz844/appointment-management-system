@@ -14,68 +14,6 @@ import { CreatePrescriptionDialog } from "@/components/create-prescription-dialo
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 
-const DUMMY_APPOINTMENTS = [
-  {
-    id: "dummy-1",
-    patient_name: "Rahul Sharma",
-    patient_id: "OPD-DUM-101",
-    date: new Date().toISOString().split("T")[0],
-    time: "10:00 AM",
-    doctor: "Dr. Amit Shah",
-    specialty: "Cardiology",
-    type: "Online",
-    status: "Confirmed",
-    isDummy: true
-  },
-  {
-    id: "dummy-2",
-    patient_name: "Sanya Malhotra",
-    patient_id: "OPD-DUM-102",
-    date: new Date().toISOString().split("T")[0],
-    time: "11:30 AM",
-    doctor: "Dr. Priya Rai",
-    specialty: "Pediatrics",
-    type: "Online",
-    status: "Scheduled",
-    isDummy: true
-  },
-  {
-    id: "dummy-3",
-    patient_name: "Vikram Singh",
-    patient_id: "OPD-DUM-103",
-    date: new Date().toISOString().split("T")[0],
-    time: "02:00 PM",
-    doctor: "Dr. Rajesh Kumar",
-    specialty: "Orthopedics",
-    type: "Online",
-    status: "Confirmed",
-    isDummy: true
-  },
-  {
-    id: "dummy-4",
-    patient_name: "Ananya Pandey",
-    patient_id: "OPD-DUM-104",
-    date: new Date().toISOString().split("T")[0],
-    time: "04:30 PM",
-    doctor: "Dr. Neha Sharma",
-    specialty: "Gynecology",
-    type: "Online",
-    status: "Scheduled",
-    isDummy: true
-  },
-  {
-    id: "dummy-5",
-    patient_name: "Karan Johar",
-    patient_id: "OPD-DUM-105",
-    date: new Date().toISOString().split("T")[0],
-    time: "06:00 PM",
-    doctor: "Dr. Sameer Khan",
-    specialty: "Neurology",
-    type: "Online",
-    status: "Confirmed",
-    isDummy: true
-  }
-]
 
 export default function AppointmentsPage() {
   const searchParams = useSearchParams()
@@ -108,8 +46,7 @@ export default function AppointmentsPage() {
       const docsData = await docsRes.json()
       const specsData = await specsRes.json()
 
-      const combinedAppts = [...(Array.isArray(apptsData) ? apptsData : []), ...DUMMY_APPOINTMENTS]
-      setAppointments(combinedAppts)
+      setAppointments(Array.isArray(apptsData) ? apptsData : [])
       if (meRes.ok) setUser(meData.user)
       setDoctors(Array.isArray(docsData) ? docsData : [])
       setSpecialties(Array.isArray(specsData) ? specsData : [])
@@ -151,22 +88,24 @@ export default function AppointmentsPage() {
   }, [filterDoctor, filterMonth, filterYear, filterDate, activeTab])
 
   const filteredAppointments = appointments.filter(a => {
-    // Dummy items ONLY visible in the Online Appointment tabs
-    if (a.isDummy) {
-      return activeTab === "online" || activeTab === "allOnline"
-    }
-
     let match = true
     if (filterDoctor !== "all" && a.doctor !== filterDoctor) match = false
 
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-    if (activeTab === "today" && a.date !== today) match = false
+    const isOnline = (a.type !== "OPD" && a.type === "Online Consultation") ||
+      (a.type !== "OPD" && (
+        a.notes?.includes("[Online Booking]") ||
+        a.notes?.includes("[Booked From PGF APP]") ||
+        a.notes?.includes("Online Teleconsultation") ||
+        a.notes?.includes("Online appointment")
+      ))
 
-    // Online filtering logic (for non-dummy items)
-    if (activeTab === "online" && (a.type !== "Online" || a.date !== today)) match = false
+    if (activeTab === "today" && (a.date !== today || isOnline)) match = false
+    if (activeTab === "all" && isOnline) match = false
 
-    if (activeTab === "allOnline" && a.type !== "Online") match = false
+    if (activeTab === "online" && (!isOnline || a.date !== today)) match = false
+    if (activeTab === "allOnline" && !isOnline) match = false
 
     if (filterDate && a.date !== filterDate) match = false
 
@@ -189,6 +128,30 @@ export default function AppointmentsPage() {
 
     return match
   })
+
+  const isVideoEnabled = (date: string, time: string) => {
+    try {
+      if (!date || !time) return false
+
+      // Parse appointment time: "09:30 AM"
+      const [timeStr, period] = time.split(' ')
+      let [hours, minutes] = timeStr.split(':').map(Number)
+      if (period === 'PM' && hours !== 12) hours += 12
+      if (period === 'AM' && hours === 12) hours = 0
+
+      // Create appointment date object in local (IST) time
+      const apptDate = new Date(`${date}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`)
+
+      const now = new Date()
+      const diffMs = apptDate.getTime() - now.getTime()
+      const diffMins = diffMs / (1000 * 60)
+
+      // Enable only 5 minutes before or if call is ongoing
+      return diffMins <= 5
+    } catch (e) {
+      return false
+    }
+  }
 
   const stats = {
     total: filteredAppointments.length,
@@ -467,7 +430,7 @@ export default function AppointmentsPage() {
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Visit Type</TableHead>
                       )}
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12">Status</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12 text-right">Action</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 h-12 text-center">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -482,7 +445,9 @@ export default function AppointmentsPage() {
                               {apt.patient_name}
                             </Link>
                           </TableCell>
-                          <TableCell className="font-mono text-[11px] text-slate-500 py-4">{apt.patient_id}</TableCell>
+                          <TableCell className="font-mono text-[11px] text-slate-500 py-4">
+                            {apt.unique_citizen_card_number || apt.patient_id}
+                          </TableCell>
                           {activeTab !== "today" && activeTab !== "online" && (
                             <TableCell className="py-4">
                               <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
@@ -544,17 +509,26 @@ export default function AppointmentsPage() {
                                   </Button>
                                 </CreatePrescriptionDialog>
                               )}
-                              {apt.type === "Online" && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 px-2.5 rounded-lg border-indigo-200 dark:border-indigo-800 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all font-bold text-[10px] uppercase tracking-widest"
-                                  onClick={() => window.open(`https://meet.jit.si/ParthGautamFoundation-${apt._id || apt.id}`, '_blank')}
-                                  title="Join Video Call"
-                                >
-                                  <Video className="h-3 w-3 mr-1" />
-                                  Join
-                                </Button>
+                              {(apt.type === "Online Consultation" || apt.notes?.includes("[Online Booking]") || (apt.notes?.includes("[Booked From PGF APP]") && apt.type !== "OPD") || apt.notes?.includes("Online")) && (
+                                (() => {
+                                  const enabled = apt.type === "Online Consultation" || isVideoEnabled(apt.date, apt.time) || apt.notes?.includes("Online");
+                                  return (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className={cn(
+                                        "h-7 px-2.5 rounded-lg border-indigo-200 dark:border-indigo-800 text-indigo-600 font-bold text-[10px] uppercase tracking-widest transition-all",
+                                        enabled ? "hover:bg-indigo-600 hover:text-white" : "opacity-50 cursor-not-allowed bg-slate-100"
+                                      )}
+                                      onClick={() => enabled && window.open(`https://meet.jit.si/ParthGautamFoundation-${apt._id || apt.id}`, '_blank')}
+                                      title={enabled ? "Join Video Call" : "Video will enable before 5 min"}
+                                      disabled={!enabled}
+                                    >
+                                      <Video className="h-3 w-3 mr-1" />
+                                      Join
+                                    </Button>
+                                  )
+                                })()
                               )}
                               <EditAppointmentDialog appointment={apt} onSuccess={fetchAppointments}>
                                 <Button variant="ghost" size="sm" className="h-7 px-2 rounded-lg hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all font-bold text-[10px] uppercase tracking-widest" title="Edit Appointment">
