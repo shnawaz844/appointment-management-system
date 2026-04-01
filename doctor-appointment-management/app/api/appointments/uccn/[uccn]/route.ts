@@ -12,7 +12,7 @@ export async function GET(
     //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     // }
 
-    const { uccn } = params
+    const { uccn } = await params
 
     if (!uccn) {
       return NextResponse.json({ error: "UCCN is required" }, { status: 400 })
