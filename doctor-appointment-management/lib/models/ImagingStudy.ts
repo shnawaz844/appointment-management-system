@@ -21,6 +21,7 @@ const ImagingStudySchema = new mongoose.Schema(
         },
         doctor: { type: String, required: true },
         thumbnail: { type: String, default: "/placeholder.svg" },
+        unique_citizen_card_number: { type: String, required: false },
     },
     { timestamps: true }
 )

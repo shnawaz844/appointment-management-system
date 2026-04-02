@@ -18,12 +18,6 @@ export async function GET(
     { params }: { params: Promise<{ path: string[] }> }
 ) {
     try {
-        // 1. Session check for security
-        const session = await getAuthSession();
-        if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
         const { path } = await params;
         if (!path || path.length < 2) {
             return NextResponse.json({ error: "Invalid storage path" }, { status: 400 });
@@ -32,6 +26,29 @@ export async function GET(
         // The first part of the path is the bucket name, the rest is the file key
         const bucket = path[0];
         const key = path.slice(1).join("/");
+
+        // 1. Auth check: Session (web) OR API Key (mobile)
+        const isPublicDoctorImage = bucket === "uploads" && key.startsWith("doctors/");
+        
+        // Extract API Key from either headers or query parameters
+        const { searchParams } = new URL(request.url);
+        const queryApiKey = searchParams.get("apiKey");
+        const headerApiKey = request.headers.get("x-api-key");
+        const apiKey = queryApiKey || headerApiKey;
+        
+        const isValidApiKey = apiKey === (process.env.OPD_API_KEY || "pgf-opd-key-2026");
+        
+        console.log(`[StorageProxy] Request for ${bucket}/${key}`);
+        console.log(`[StorageProxy] Auth method: ${queryApiKey ? "query" : headerApiKey ? "header" : "none"}`);
+        console.log(`[StorageProxy] isValidApiKey: ${isValidApiKey}`);
+        
+        if (!isPublicDoctorImage && !isValidApiKey) {
+            const session = await getAuthSession();
+            console.log(`[StorageProxy] No valid API key, checking session... ${session ? "Found" : "Not Found"}`);
+            if (!session) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
+        }
 
         // 2. Generate a signed URL that expires in 1 hour
         const command = new GetObjectCommand({

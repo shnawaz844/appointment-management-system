@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Plus, UserPlus } from "lucide-react"
+import { Loader2, Plus, UserPlus, ImagePlus, X } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function DoctorsPage() {
@@ -16,6 +16,27 @@ export default function DoctorsPage() {
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [formData, setFormData] = useState({ name: "", specialty: "", phone: "", email: "", password: "", image: "" })
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            setImageFile(file)
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
+    const removeImage = () => {
+        setImageFile(null)
+        setImagePreview(null)
+        if (fileInputRef.current) fileInputRef.current.value = ""
+    }
 
     const fetchData = async () => {
         try {
@@ -43,6 +64,23 @@ export default function DoctorsPage() {
         if (!formData.name || !formData.specialty) return
         setSubmitting(true)
         try {
+            let imageUrl = formData.image
+
+            if (imageFile) {
+                const uploadData = new FormData()
+                uploadData.append("file", imageFile)
+                const uploadRes = await fetch("/api/doctors/upload", {
+                    method: "POST",
+                    body: uploadData
+                })
+                const uploadResult = await uploadRes.json()
+                if (uploadResult.success) {
+                    imageUrl = uploadResult.url
+                } else {
+                    throw new Error(uploadResult.error || "Upload failed")
+                }
+            }
+
             let specId = specialties.find(s => s.name.toLowerCase() === formData.specialty.trim().toLowerCase())?.id
 
             if (!specId) {
@@ -64,11 +102,14 @@ export default function DoctorsPage() {
                     phone: formData.phone,
                     email: formData.email,
                     password: formData.password,
-                    image: formData.image
+                    image: imageUrl
                 }),
             })
             if (res.ok) {
                 setFormData({ name: "", specialty: "", phone: "", email: "", password: "", image: "" })
+                setImageFile(null)
+                setImagePreview(null)
+                if (fileInputRef.current) fileInputRef.current.value = ""
                 fetchData()
             }
         } catch (error) {
@@ -143,13 +184,44 @@ export default function DoctorsPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="image">Doctor Image URL</Label>
-                                    <Input
-                                        id="image"
-                                        value={formData.image}
-                                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                        placeholder="https://example.com/doctor.jpg"
-                                    />
+                                    <Label>Doctor Profile Image</Label>
+                                    <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed rounded-lg hover:bg-muted/50 transition-colors cursor-pointer relative"
+                                        onClick={() => fileInputRef.current?.click()}>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                            accept="image/*"
+                                            className="hidden"
+                                        />
+                                        {imagePreview ? (
+                                            <div className="relative group w-32 h-32">
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Preview"
+                                                    className="w-full h-full object-cover rounded-full border shadow-sm"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        removeImage()
+                                                    }}
+                                                    className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                                <div className="p-3 rounded-full bg-primary/10">
+                                                    <ImagePlus className="w-6 h-6 text-primary" />
+                                                </div>
+                                                <p className="text-sm font-medium">Click to upload photo</p>
+                                                <p className="text-xs">PNG, JPG or WebP (max 5MB)</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="password">Login Password *</Label>

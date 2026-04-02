@@ -18,6 +18,7 @@ const AppointmentSchema = new mongoose.Schema(
         },
         phone: { type: String, required: true },
         notes: { type: String },
+        unique_citizen_card_number: { type: String, required: false },
     },
     { timestamps: true }
 )

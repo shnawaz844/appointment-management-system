@@ -23,6 +23,9 @@ const PrescriptionSchema = new mongoose.Schema(
         doctorId: { type: String, required: true },
         instructions: { type: String },
         duration: { type: String },
+        unique_citizen_card_number: { type: String, required: false },
+        attachment_url: { type: String, required: false },
+        attachment_type: { type: String, required: false },
     },
     { timestamps: true }
 )

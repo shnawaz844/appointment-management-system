@@ -63,7 +63,7 @@ export async function POST(request: Request) {
                 .select("name, specialty_id")
                 .eq("id", doctorId)
                 .single()
-            
+
             if (doc) {
                 consultantName = doc.name;
                 // If the app didn't send a specialty name, we try to fetch it from the ID
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
 
         // 1. ── PATIENT SYNC ──────────────────────────────────────────────────
         let finalUhid = ""
-        
+
         // Check for existing patient by citizen card ID
         const { data: existingPatientByCC } = await supabase
             .from("patients")
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
                 finalUhid = `P${Math.floor(1000 + Math.random() * 9000).toString()}`
                 const now = new Date()
                 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-                
+
                 const { error: pError } = await supabase.from("patients").insert({
                     id: finalUhid,
                     name: patientName,
@@ -139,13 +139,13 @@ export async function POST(request: Request) {
         const nowUTC = new Date()
         const istMills = nowUTC.getTime() + (5.5 * 3600000)
         const istDateObj = new Date(istMills)
-        
+
         // Start of IST Day in ISO format for DB query
         const istYear = istDateObj.getUTCFullYear()
         const istMonth = String(istDateObj.getUTCMonth() + 1).padStart(2, '0')
         const istDay = String(istDateObj.getUTCDate()).padStart(2, '0')
         const startOfDay = `${istYear}-${istMonth}-${istDay}T00:00:00.000Z`
-        
+
         const { count } = await supabase
             .from("opd")
             .select("*", { count: "exact", head: true })
@@ -166,11 +166,11 @@ export async function POST(request: Request) {
         // validDate calculation for printed slip (5 days from the provided appointment date)
         const [y, m, d] = date.split('-').map(Number);
         // Create date at noon UTC to avoid edge-of-day shifts during calculation
-        const apptDateUTC = new Date(Date.UTC(y, m - 1, d, 12, 0, 0)); 
+        const apptDateUTC = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
         const validDateUTC = new Date(apptDateUTC.getTime() + (5 * 24 * 60 * 60 * 1000));
-        const formatDateForUpto = (d: Date) => d.getUTCDate().toString().padStart(2, '0') + ' ' + 
-                                               ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()] + ' ' + 
-                                               d.getUTCFullYear();
+        const formatDateForUpto = (d: Date) => d.getUTCDate().toString().padStart(2, '0') + ' ' +
+            ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()] + ' ' +
+            d.getUTCFullYear();
 
         const opdData = {
             uhid_no: finalUhid,
@@ -206,7 +206,7 @@ export async function POST(request: Request) {
             type: appointmentType || "OPD",
             status: "Scheduled",
             phone: phone || null,
-            notes: notes ? `[Booked From PGF APP] ${notes}` : "[Booked From PGF APP]",
+            notes: notes ? `${notes}\n\n[Booked From PGF APP]` : "[Booked From PGF APP]",
         }
 
         const { data: finalAppt, error: aError } = await supabase
@@ -219,45 +219,52 @@ export async function POST(request: Request) {
         console.log("[POST /api/opd-online] Created appointment:", finalAppt?.id || apptId)
 
         // 4. ── PROCESS DOCUMENTS ─────────────────────────────────────────────
-        // Medical Reports (and Prescriptions stored as Medical Records)
-        // Note: record_type must be one of: 'Progress Notes', 'Imaging Report', 'Lab Report', 'Prescription' (assuming 'Prescription' is allowed or handled by UI)
-        // If 'Prescription' is not allowed by check constraint, we use 'Progress Notes' and rely on the summary for filtering.
-        const medicalRecordsToInsert = [
-            ...medicalReports.map((url: string) => ({
-                id: `MR-${Math.floor(10000 + Math.random() * 90000)}`,
-                patient_name: patientName,
-                patient_id: finalUhid,
-                record_type: "Progress Notes",
-                date: date,
-                doctor: consultantName,
-                status: "Active",
-                summary: "Uploaded via PGF app booking (Medical Report)",
-                attachment_url: url,
-                attachment_type: url.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg"
-            })),
-            ...prescriptions.map((url: string) => ({
-                id: `MR-${Math.floor(10000 + Math.random() * 90000)}`,
-                patient_name: patientName,
-                patient_id: finalUhid,
-                record_type: "Prescription", // We'll try 'Prescription' and handle mapping
-                date: date,
-                doctor: consultantName,
-                status: "Active",
-                summary: "Uploaded via PGF app booking (Prescription)",
-                attachment_url: url,
-                attachment_type: url.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg"
-            }))
-        ]
+        const medicalRecordsToInsert = medicalReports.map((url: string) => ({
+            id: `MR-${Math.floor(10000 + Math.random() * 90000)}`,
+            patient_name: patientName,
+            patient_id: finalUhid,
+            record_type: "Progress Notes",
+            date: date,
+            doctor: consultantName,
+            status: "Active",
+            summary: "Uploaded via PGF app booking (Medical Report)",
+            attachment_url: url,
+            attachment_type: url.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+            unique_citizen_card_number: citizenId
+        }))
 
         if (medicalRecordsToInsert.length > 0) {
             const { error: mrError } = await supabase.from("medicalrecords").insert(medicalRecordsToInsert)
-            if (mrError) {
-                console.error("Error inserting medical records:", mrError)
-                // Fallback: If 'Prescription' type fails, use 'Progress Notes'
-                if (mrError.code === '23514' && mrError.message.includes('record_type')) {
-                    const fallbackRecords = medicalRecordsToInsert.map(r => ({...r, record_type: 'Progress Notes'}))
-                    await supabase.from("medicalrecords").insert(fallbackRecords)
-                }
+            if (mrError) console.error("Error inserting medical records:", mrError)
+        }
+
+        // Prescriptions (stored in the actual prescriptions table)
+        let mainPrescriptionId = null
+        if (prescriptions.length > 0) {
+            const prescriptionsToInsert = prescriptions.map((url: string) => ({
+                id: `RX-${Math.floor(10000 + Math.random() * 90000)}`,
+                patient_name: patientName,
+                patient_id: finalUhid,
+                issued: date,
+                status: "Active",
+                doctor_name: consultantName,
+                doctor_id: doctorId || "PGF-APP",
+                instructions: "Uploaded via PGF app booking",
+                attachment_url: url,
+                attachment_type: url.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+                unique_citizen_card_number: citizenId
+            }))
+
+            const { data: rxData, error: rxError } = await supabase.from("prescriptions").insert(prescriptionsToInsert).select()
+            if (rxError) {
+                console.error("Error inserting prescriptions:", rxError)
+            } else if (rxData && rxData.length > 0) {
+                mainPrescriptionId = rxData[0].id
+                // Link the first prescription to the appointment
+                await supabase
+                    .from("appointments")
+                    .update({ prescription_id: mainPrescriptionId })
+                    .eq("id", apptId)
             }
         }
 
@@ -275,7 +282,8 @@ export async function POST(request: Request) {
                 year: new Date(date).getFullYear().toString(),
                 ai_flag: "Normal",
                 doctor: consultantName,
-                thumbnail: url
+                thumbnail: url,
+                unique_citizen_card_number: citizenId
             }))
             const { error: imgError } = await supabase.from("imagingstudies").insert(imagingToInsert)
             if (imgError) console.error("Error inserting imaging studies:", imgError)
@@ -291,8 +299,8 @@ export async function POST(request: Request) {
     } catch (error: any) {
         console.error("[POST /api/opd-online] Error:", error)
         return NextResponse.json(
-            { 
-                error: "Booking Failed", 
+            {
+                error: "Booking Failed",
                 message: error?.message || "Internal Server Error",
                 details: error?.details || error?.hint || "Database constraint violation"
             },

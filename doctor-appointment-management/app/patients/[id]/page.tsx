@@ -14,15 +14,36 @@ import { ViewReportDialog } from "@/components/view-report-dialog"
 import { CreatePrescriptionDialog } from "@/components/create-prescription-dialog"
 import { DeletePrescriptionDialog } from "@/components/delete-prescription-dialog"
 import { ViewMedicalRecordDialog } from "@/components/view-medical-record-dialog"
+import { ViewPrescriptionDialog } from "@/components/view-prescription-dialog"
 import { FileSignature, Trash2 } from "lucide-react"
 import { DeleteReportDialog } from "@/components/delete-report-dialog"
 
 export default async function PatientProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  // Fetch all data in parallel using Supabase
+  // Fetch patient data first to get UCCN for other queries
+  const { data: patient } = await supabase.from("patients").select("*").eq("id", id).single()
+
+  if (!patient) {
+    return (
+      <main className="flex-1">
+        <div className="container py-8 px-8">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold text-foreground mb-2">Patient Not Found</h2>
+            <p className="text-muted-foreground mb-4">The patient you're looking for doesn't exist.</p>
+            <Link href="/patients">
+              <Button>Back to Patients</Button>
+            </Link>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  const uccn = patient.unique_citizen_card_number
+
+  // Fetch all other data in parallel
   const [
-    { data: patient },
     { data: patientReportsData },
     { data: patientAppointmentsData },
     { data: patientMedicalRecordsData },
@@ -30,12 +51,25 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
     { data: patientPrescriptionsData },
     { data: specialtiesData }
   ] = await Promise.all([
-    supabase.from("patients").select("*").eq("id", id).single(),
-    supabase.from("reports").select("*").eq("patient_id", id),
-    supabase.from("appointments").select("*").eq("patient_id", id).order("date", { ascending: false }),
-    supabase.from("medicalrecords").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
-    supabase.from("imagingstudies").select("*").eq("patient_id", id).order("created_at", { ascending: false }),
-    supabase.from("prescriptions").select("*").eq("patient_id", id).order("issued", { ascending: false }),
+    supabase.from("reports")
+      .select("*")
+      .or(`patient_id.eq.${id}${uccn ? `,unique_citizen_card_number.eq.${uccn}` : ""}`),
+    supabase.from("appointments")
+      .select("*")
+      .or(`patient_id.eq.${id}${uccn ? `,unique_citizen_card_number.eq.${uccn}` : ""}`)
+      .order("date", { ascending: false }),
+    supabase.from("medicalrecords")
+      .select("*")
+      .or(`patient_id.eq.${id}${uccn ? `,unique_citizen_card_number.eq.${uccn}` : ""}`)
+      .order("created_at", { ascending: false }),
+    supabase.from("imagingstudies")
+      .select("*")
+      .or(`patient_id.eq.${id}${uccn ? `,unique_citizen_card_number.eq.${uccn}` : ""}`)
+      .order("created_at", { ascending: false }),
+    supabase.from("prescriptions")
+      .select("*")
+      .or(`patient_id.eq.${id}${uccn ? `,unique_citizen_card_number.eq.${uccn}` : ""}`)
+      .order("issued", { ascending: false }),
     supabase.from("specialties").select("*")
   ])
 
@@ -89,22 +123,6 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
     return "X-rays, CT scans, MRI, and ultrasound imaging"
   }
 
-  if (!patient) {
-
-    return (
-      <main className="flex-1">
-        <div className="container py-8 px-8">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Patient Not Found</h2>
-            <p className="text-muted-foreground mb-4">The patient you're looking for doesn't exist.</p>
-            <Link href="/patients">
-              <Button>Back to Patients</Button>
-            </Link>
-          </div>
-        </div>
-      </main>
-    )
-  }
 
   // Group reports by type
   const reportsByType = patientReports.reduce(
@@ -269,10 +287,10 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                         <p className="text-sm font-medium mb-2 text-[#e05d38]">Appointment Notes</p>
                         {(() => {
                           const notes = patientAppointments[0].notes;
-                          const match = notes.match(/^(\[.*?\])\s*(.*)$/);
+                          const match = notes.trim().match(/^(\[.*?\])\s*([\s\S]*)$/);
                           if (match) {
                             return (
-                              <div className="space-y-1">
+                              <div className="space-y-2">
                                 <p className="text-base font-bold text-foreground leading-tight">{match[2]}</p>
                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-slate-100 dark:bg-slate-900 w-fit px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800">
                                   {match[1]}
@@ -280,7 +298,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                               </div>
                             );
                           }
-                          return <p className="text-base font-medium text-foreground italic">"{notes}"</p>;
+                          return <p className="text-base font-medium text-foreground ">"{notes}"</p>;
                         })()}
                       </div>
                     </>
@@ -336,11 +354,24 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">{apt.date} at {apt.time} • {apt.doctor}</p>
                           </div>
                         </div>
-                        {apt.notes && (
-                          <div className="mt-2 pl-14">
-                            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium italic">"{apt.notes}"</p>
-                          </div>
-                        )}
+                         {apt.notes && (
+                           <div className="mt-2 pl-14">
+                             {(() => {
+                               const match = apt.notes.trim().match(/^(\[.*?\])\s*([\s\S]*)$/);
+                               if (match) {
+                                 return (
+                                   <div className="space-y-1.5">
+                                     <p className="text-xs text-slate-600 dark:text-slate-400 font-medium italic">"{match[2]}"</p>
+                                     <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest bg-slate-100 dark:bg-slate-900 w-fit px-1.5 py-0.5 rounded-md border border-slate-200 dark:border-slate-800">
+                                       {match[1]}
+                                     </p>
+                                   </div>
+                                 );
+                               }
+                               return <p className="text-xs text-slate-600 dark:text-slate-400 font-medium italic">"{apt.notes}"</p>;
+                             })()}
+                           </div>
+                         )}
                       </div>
                     ))
                   ) : (
@@ -525,12 +556,30 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                                 Duration: {rx.duration}
                               </div>
                             )}
-                            <DeletePrescriptionDialog prescriptionId={rx.id} medicationName={rx.medications?.[0]?.medication || "Prescription"}>
-                              <Button variant="ghost" size="sm" className="h-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-all px-3 mt-2">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest">Delete</span>
-                              </Button>
-                            </DeletePrescriptionDialog>
+                            <div className="flex items-center gap-1 mt-2">
+                              {rx.attachment_url && (
+                                <ViewPrescriptionDialog prescription={rx}>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 px-3 flex items-center gap-2 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest"
+                                    title="View Prescription Attachment"
+                                  >
+                                    {rx.attachment_type?.startsWith("image/") ? (
+                                      <FileImage className="h-3 w-3" />
+                                    ) : (
+                                      <ExternalLink className="h-3 w-3" />
+                                    )}
+                                    View File
+                                  </Button>
+                                </ViewPrescriptionDialog>
+                              )}
+                              <DeletePrescriptionDialog prescriptionId={rx.id} medicationName={rx.medications?.[0]?.medication || "Prescription"}>
+                                <Button variant="ghost" size="sm" className="h-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-all px-3">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  <span className="text-[10px] font-bold uppercase tracking-widest">Delete</span>
+                                </Button>
+                              </DeletePrescriptionDialog>
+                            </div>
                           </div>
                         </div>
                       </div>

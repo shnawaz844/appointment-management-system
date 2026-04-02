@@ -30,6 +30,7 @@ const MedicalRecordSchema = new mongoose.Schema(
         summary: { type: String, required: false },
         attachment_url: { type: String, required: false },
         attachment_type: { type: String, required: false },
+        unique_citizen_card_number: { type: String, required: false },
     },
     { timestamps: true }
 )

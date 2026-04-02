@@ -19,12 +19,29 @@ export async function GET(
             return NextResponse.json({ error: "UCCN is required" }, { status: 400 })
         }
 
-        // Fetch imaging studies by citizen_id directly
-        const { data, error } = await supabase
-            .from("imagingstudies")
-            .select("*")
-            .eq("citizen_id", uccn)
-            .order("date", { ascending: false })
+        // 1. First find the patient_id from the patients table using UCCN
+        const { data: patient, error: patientError } = await supabase
+            .from("patients")
+            .select("id")
+            .eq("unique_citizen_card_number", uccn)
+            .maybeSingle()
+
+        if (patientError) {
+            console.error("Error finding patient by UCCN:", patientError)
+        }
+
+        const patientId = patient?.id
+
+        // 2. Fetch imaging studies where citizen_id matches OR patient_id matches
+        let query = supabase.from("imagingstudies").select("*")
+
+        if (patientId) {
+            query = query.or(`citizen_id.eq.${uccn},patient_id.eq.${patientId}`)
+        } else {
+            query = query.eq("citizen_id", uccn)
+        }
+
+        const { data, error } = await query.order("date", { ascending: false })
 
         if (error) throw error
 
