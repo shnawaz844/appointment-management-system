@@ -320,6 +320,7 @@ export async function GET(request: Request) {
             .from("appointments")
             .select("*")
             .eq("unique_citizen_card_number", citizenId)
+            .eq("type", "Online Consultation")
             .order("created_at", { ascending: false })
 
         if (error) throw error
