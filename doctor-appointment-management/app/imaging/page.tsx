@@ -185,7 +185,7 @@ export default function ImagingPage() {
             {paginatedStudies.map((study) => (
               <Card key={study.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div
-                  className="relative aspect-square bg-muted group cursor-pointer"
+                  className="relative h-48 bg-muted group cursor-pointer"
                   onClick={() => openImageView(study)}
                 >
                   <img

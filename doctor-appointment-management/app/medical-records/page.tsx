@@ -351,7 +351,7 @@ export default function MedicalRecordsPage() {
       {/* Record Detail Modal */}
       {selectedRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-4">
-          <Card className="w-full max-w-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border-white/20 dark:border-slate-800 shadow-2xl rounded-3xl overflow-hidden animate-in zoom-in-95 duration-300">
+          <Card className="w-full h-[90vh] max-w-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border-white/20 dark:border-slate-800 shadow-2xl rounded-3xl overflow-y-scroll animate-in zoom-in-95 duration-300">
             <CardHeader className="flex flex-row items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <CardTitle className="text-2xl font-black text-slate-900 dark:text-white">Clinical Detail</CardTitle>
