@@ -309,24 +309,29 @@ export function AppSidebar() {
                           {user.name.substring(0, 2).toUpperCase()}
                         </div>
                         {state === "expanded" && (
-                          <div className="flex flex-col items-start min-w-0 text-left animate-in fade-in slide-in-from-left-2 duration-300">
-                            <span className="text-sm font-bold text-sidebar-foreground truncate w-full group-hover:text-primary">
-                              {user.name}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <ShieldCheck className="h-3 w-3 text-emerald-500" />
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider group-hover:text-primary">
-                                {user.role}
+                            <div className="flex flex-col items-start min-w-0 text-left animate-in fade-in slide-in-from-left-2 duration-300">
+                              <span className="text-sm font-bold text-sidebar-foreground truncate w-full group-hover:text-primary">
+                                {user.name}
                               </span>
+                              <div className="flex items-center gap-1">
+                                <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider group-hover:text-primary">
+                                  {user.role}
+                                </span>
+                              </div>
+                              {user.specialty && (
+                                <span className="text-[9px] font-bold text-primary/80 uppercase tracking-tight truncate w-full mt-0.5 group-hover:text-primary animate-in slide-in-from-top-1 duration-300">
+                                  {user.specialty}
+                                </span>
+                              )}
                             </div>
-                          </div>
                         )}
                       </Button>
                     </DialogTrigger>
                   </TooltipTrigger>
                   {state === "collapsed" && (
                     <TooltipContent side="right">
-                      <p>{user.name} ({user.role})</p>
+                      <p>{user.name} ({user.role}{user.specialty ? ` - ${user.specialty}` : ''})</p>
                     </TooltipContent>
                   )}
                 </Tooltip>
@@ -352,6 +357,12 @@ export function AppSidebar() {
                         <ShieldCheck className="h-4 w-4" />
                         {user.role}
                       </p>
+                      {user.specialty && (
+                        <p className="text-xs font-bold text-muted-foreground mt-1 flex items-center gap-1">
+                           <Activity className="h-3 w-3 text-primary/60" />
+                           {user.specialty}
+                        </p>
+                      )}
                     </div>
                   </div>
 
