@@ -4,10 +4,21 @@ import { getAuthSession } from "@/lib/auth"
 
 export async function GET(request: Request) {
     try {
+        const session = await getAuthSession()
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
         const { searchParams } = new URL(request.url)
         const dateFilter = searchParams.get("date") // e.g. "26 Mar 2026"
 
         let query = supabase.from("opd").select("*").order("created_at", { ascending: false })
+
+        // Filter by consultant name if the user is a doctor
+        if (session.role === "DOCTOR") {
+            query = query.eq("consultant", session.name)
+        }
+
         if (dateFilter) {
             // Flexible filtering: match both "01 Apr 2026" and older "01/Apr/2026" formats
             const alternateFilter = dateFilter.replace(/ /g, '/')
